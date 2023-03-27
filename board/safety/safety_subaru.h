@@ -145,8 +145,9 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
 
   if (valid) {
     const int bus = GET_BUS(to_push);
-    const int alt_bus = subaru_gen2 ? 1 : 0;
-    const int alt_bus2 = subaru_gen2 ? 1 : 2;
+    
+    const int alt_bus = 0;
+    const int alt_bus2 = 2;
 
     int addr = GET_ADDR(to_push);
     if ((addr == 0x119) && (bus == 0)) {
