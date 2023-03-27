@@ -57,11 +57,12 @@ const CanMsg SUBARU_TX_MSGS[] = {
 
 const CanMsg SUBARU_LONG_TX_MSGS[] = {
   {ES_LKAS, 0, 8},
-  {ES_Brake, 0, 8},
   {ES_Distance, 0, 8},
-  {ES_Status, 0, 8},
   {ES_DashStatus, 0, 8},
   {ES_LKAS_State, 0, 8},
+
+  {ES_Brake, 0, 8},
+  {ES_Status, 0, 8},
   {Brake_Status, 2, 8},
   {CruiseControl, 2, 8}
 };
@@ -74,6 +75,21 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {ES_LKAS_State, 0, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
+
+// Using second panda
+const CanMsg SUBARU_GEN2_LONG_TX_MSGS[] = {
+  {ES_LKAS, 0, 8},
+  {ES_Distance, 0, 8},
+  {ES_DashStatus, 0, 8},
+  {ES_LKAS_State, 0, 8},
+
+  {ES_Brake, 0, 8},
+  {ES_Status, 0, 8},
+  {Brake_Status, 2, 8},
+  {CruiseControl, 2, 8}
+};
+#define SUBARU_GEN2_LONG_TX_MSGS_LEN (sizeof(SUBARU_GEN2_LONG_TX_MSGS) / sizeof(SUBARU_GEN2_LONG_TX_MSGS[0]))
+
 
 AddrCheckStruct subaru_addr_checks[] = {
   {.msg = {{ 0x40, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
@@ -171,17 +187,25 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
 
 
 static int subaru_tx_hook(CANPacket_t *to_send) {
-
   int tx = 1;
   int addr = GET_ADDR(to_send);
   bool violation = false;
 
-  if (subaru_gen2) {
-    tx = msg_allowed(to_send, SUBARU_GEN2_TX_MSGS, SUBARU_GEN2_TX_MSGS_LEN);
-  } else if (subaru_longitudinal) {
-    tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
-  } else {
-    tx = msg_allowed(to_send, SUBARU_TX_MSGS, SUBARU_TX_MSGS_LEN);
+  if (subaru_longitudinal){
+    if (subaru_gen2) {
+      tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
+    }
+    else{
+      tx = msg_allowed(to_send, SUBARU_GEN2_LONG_TX_MSGS, SUBARU_GEN2_LONG_TX_MSGS_LEN);
+    }
+  }
+  else{
+    if (subaru_gen2) {
+      tx = msg_allowed(to_send, SUBARU_GEN2_TX_MSGS, SUBARU_GEN2_TX_MSGS_LEN);
+    }
+    else{
+      tx = msg_allowed(to_send, SUBARU_TX_MSGS, SUBARU_TX_MSGS_LEN);
+    }
   }
 
   // steer cmd checks
@@ -193,7 +217,6 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     if (steer_torque_cmd_checks(desired_torque, -1, limits)) {
       tx = 0;
     }
-
   }
 
   if (subaru_longitudinal) {
