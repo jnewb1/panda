@@ -145,7 +145,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
 
   if (valid) {
     const int bus = GET_BUS(to_push);
-    
+
     const int alt_bus = 0;
     const int alt_bus2 = 2;
 
@@ -163,7 +163,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if ((addr == 0x240) && (bus == alt_bus)) {
+    if ((addr == CruiseControl) && (bus == alt_bus)) {
       bool cruise_engaged = GET_BIT(to_push, 41U) != 0U;
       pcm_cruise_check(cruise_engaged);
     }
@@ -194,10 +194,10 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 
   if (subaru_longitudinal){
     if (subaru_gen2) {
-      tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
+      tx = msg_allowed(to_send, SUBARU_GEN2_LONG_TX_MSGS, SUBARU_GEN2_LONG_TX_MSGS_LEN);
     }
     else{
-      tx = msg_allowed(to_send, SUBARU_GEN2_LONG_TX_MSGS, SUBARU_GEN2_LONG_TX_MSGS_LEN);
+      tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
     }
   }
   else{
@@ -210,7 +210,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   }
 
   // steer cmd checks
-  if (addr == 0x122) {
+  if (addr == ES_LKAS) {
     int desired_torque = ((GET_BYTES_04(to_send) >> 16) & 0x1FFFU);
     desired_torque = -1 * to_signed(desired_torque, 13);
 
