@@ -29,8 +29,8 @@ const int SUBARU_THROTTLE_MAX = 3400;
 const int SUBARU_RPM_MIN = 0;
 const int SUBARU_RPM_MAX = 3200;
 
-const uint Brake_Status =  0x13c;
-const uint CruiseControl = 0x240;
+const int Brake_Status =  0x13c;
+const int CruiseControl = 0x240;
 
 
 // 0x122 is ES_LKAS
@@ -40,12 +40,12 @@ const uint CruiseControl = 0x240;
 // 0x321 is ES_DashStatus
 // 0x322 is ES_LKAS_State
 
-const uint ES_LKAS = 0x122;
-const uint ES_Brake = 0x220;
-const uint ES_Distance = 0x221;
-const uint ES_Status =  0x222;
-const uint ES_DashStatus = 0x321;
-const uint ES_LKAS_State = 0x322;
+const int ES_LKAS = 0x122;
+const int ES_Brake = 0x220;
+const int ES_Distance = 0x221;
+const int ES_Status =  0x222;
+const int ES_DashStatus = 0x321;
+const int ES_LKAS_State = 0x322;
 
 const CanMsg SUBARU_TX_MSGS[] = {
   {ES_LKAS, 0, 8},
