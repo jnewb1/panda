@@ -47,6 +47,9 @@ const int ES_Status =  0x222;
 const int ES_DashStatus = 0x321;
 const int ES_LKAS_State = 0x322;
 
+const int MAIN_BUS = 0;
+const int CAMERA_BUS = 2;
+
 const CanMsg SUBARU_TX_MSGS[] = {
   {ES_LKAS, 0, 8},
   {ES_Distance, 0, 8},
@@ -114,9 +117,11 @@ addr_checks subaru_gen2_rx_checks = {subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_C
 
 const uint16_t SUBARU_PARAM_GEN2 = 1;
 const uint16_t SUBARU_PARAM_LONGITUDINAL = 2;
+const uint16_t SUBARU_PARAM_GEN2_SECOND_PANDA = 64;
 
 bool subaru_gen2 = false;
 bool subaru_longitudinal = false;
+bool subaru_gen2_second_panda = false;
 
 bool subaru_aeb = false;
 
@@ -249,21 +254,21 @@ static int subaru_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 
   int addr = GET_ADDR(to_fwd);
 
-  if (bus_num == 0) {
+  if (bus_num == MAIN_BUS) {
     // Global Platform
     bool block_msg = subaru_longitudinal && ((addr == Brake_Status) || (addr == CruiseControl));
     if (!block_msg) {
-      bus_fwd = 2;  // to the eyesight camera
+      bus_fwd = CAMERA_BUS;  // to the eyesight camera
     }
   }
 
-  if (bus_num == 2) {
+  if (bus_num == CAMERA_BUS) {
     // Global Platform
     bool block_common = (addr == ES_LKAS) || (addr == ES_DashStatus) || (addr == ES_LKAS_State);
     bool block_long = (addr == ES_Brake) || (addr == ES_Distance) || (addr == ES_Status);
     bool block_msg = block_common || (subaru_longitudinal && block_long);
     if (!block_msg) {
-      bus_fwd = 0;  // Main CAN
+      bus_fwd = MAIN_BUS;  // Main CAN
     }
   }
 
@@ -275,6 +280,7 @@ static const addr_checks* subaru_init(uint16_t param) {
 
 #ifdef ALLOW_DEBUG
   subaru_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
+  subaru_gen2_second_panda = GET_FLAG(param, SUBARU_PARAM_GEN2_SECOND_PANDA);
 #endif
 
   if (subaru_gen2) {
