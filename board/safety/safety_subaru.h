@@ -25,7 +25,6 @@ const CanMsg SUBARU_TX_MSGS[] = {
   {0x221, 0, 8},
   {0x321, 0, 8},
   {0x322, 0, 8},
-  {0x323, 0, 8},
 };
 #define SUBARU_TX_MSGS_LEN (sizeof(SUBARU_TX_MSGS) / sizeof(SUBARU_TX_MSGS[0]))
 
@@ -33,10 +32,14 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {0x122, 0, 8},
   {0x221, 1, 8},
   {0x321, 0, 8},
-  {0x322, 0, 8},
-  {0x323, 0, 8}
+  {0x322, 0, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
+
+const CanMsg SUBARU_INFOTAINMENT_TX_MSGS[] = {
+  {0x323, 0, 8}
+};
+#define SUBARU_INFOTAINMENT_TX_MSGS_LEN (sizeof(SUBARU_INFOTAINMENT_TX_MSGS) / sizeof(SUBARU_INFOTAINMENT_TX_MSGS[0]))
 
 AddrCheckStruct subaru_addr_checks[] = {
   {.msg = {{ 0x40, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
@@ -60,7 +63,10 @@ addr_checks subaru_gen2_rx_checks = {subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_C
 
 
 const uint16_t SUBARU_PARAM_GEN2 = 1;
+const uint16_t SUBARU_PARAM_INFOTAINMENT = 64;
+
 bool subaru_gen2 = false;
+bool subaru_infotainment = false;
 
 
 static uint32_t subaru_get_checksum(CANPacket_t *to_push) {
@@ -131,6 +137,10 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     tx = msg_allowed(to_send, SUBARU_GEN2_TX_MSGS, SUBARU_GEN2_TX_MSGS_LEN);
   } else {
     tx = msg_allowed(to_send, SUBARU_TX_MSGS, SUBARU_TX_MSGS_LEN);
+  }
+
+  if(subaru_infotainment){
+    tx |= msg_allowed(to_send, SUBARU_INFOTAINMENT_TX_MSGS, SUBARU_INFOTAINMENT_TX_MSGS);
   }
 
   // steer cmd checks
