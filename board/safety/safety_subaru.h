@@ -170,7 +170,7 @@ static int subaru_fwd_hook(int bus_num, int addr) {
     // 0x321 ES_DashStatus
     // 0x322 ES_LKAS_State
     // 0x323 INFOTAINMENT_STATUS
-    bool block_infotainment = subaru_gen2 && (addr == 0x323);
+    bool block_infotainment = subaru_infotainment && (addr == 0x323);
     bool block_lkas = (addr == 0x122) || (addr == 0x321) || (addr == 0x322);
     bool block_addr = block_infotainment || block_lkas;
     
@@ -184,6 +184,7 @@ static int subaru_fwd_hook(int bus_num, int addr) {
 
 static const addr_checks* subaru_init(uint16_t param) {
   subaru_gen2 = GET_FLAG(param, SUBARU_PARAM_GEN2);
+  subaru_infotainment = GET_FLAG(param, SUBARU_PARAM_INFOTAINMENT);
 
   if (subaru_gen2) {
     subaru_rx_checks = (addr_checks){subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_CHECK_LEN};
