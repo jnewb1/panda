@@ -31,6 +31,9 @@ const int SUBARU_RPM_MAX = 3200;
 
 const int Brake_Status =  0x13c;
 const int CruiseControl = 0x240;
+const int Throttle = 0x40;
+const int Steering_Torque = 0x119;
+const int Wheel_Speeds = 0x13a;
 
 
 // 0x122 is ES_LKAS
@@ -95,21 +98,21 @@ const CanMsg SUBARU_GEN2_LONG_TX_MSGS[] = {
 
 
 AddrCheckStruct subaru_addr_checks[] = {
-  {.msg = {{ 0x40, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0x119, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x13a, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x13c, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x240, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
+  {.msg = {{Throttle, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Steering_Torque, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Wheel_Speeds, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
 };
 #define SUBARU_ADDR_CHECK_LEN (sizeof(subaru_addr_checks) / sizeof(subaru_addr_checks[0]))
 addr_checks subaru_rx_checks = {subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
 
 AddrCheckStruct subaru_gen2_addr_checks[] = {
-  {.msg = {{ 0x40, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{0x119, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x13a, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x13c, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{0x240, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
+  {.msg = {{Throttle, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Steering_Torque, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Wheel_Speeds, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
 };
 #define SUBARU_GEN2_ADDR_CHECK_LEN (sizeof(subaru_gen2_addr_checks) / sizeof(subaru_gen2_addr_checks[0]))
 addr_checks subaru_gen2_rx_checks = {subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_CHECK_LEN};
@@ -155,7 +158,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     const int alt_bus2 = 2;
 
     int addr = GET_ADDR(to_push);
-    if ((addr == 0x119) && (bus == 0)) {
+    if ((addr == Steering_Torque) && (bus == 0)) {
       int torque_driver_new;
       torque_driver_new = ((GET_BYTES_04(to_push) >> 16) & 0x7FFU);
       torque_driver_new = -1 * to_signed(torque_driver_new, 11);
@@ -174,7 +177,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     // update vehicle moving with any non-zero wheel speed
-    if ((addr == 0x13a) && (bus == alt_bus)) {
+    if ((addr == Wheel_Speeds) && (bus == alt_bus)) {
       vehicle_moving = ((GET_BYTES_04(to_push) >> 12) != 0U) || (GET_BYTES_48(to_push) != 0U);
     }
 
@@ -182,7 +185,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
       brake_pressed = ((GET_BYTE(to_push, 7) >> 6) & 1U);
     }
 
-    if ((addr == 0x40) && (bus == 0)) {
+    if ((addr == Throttle) && (bus == 0)) {
       gas_pressed = GET_BYTE(to_push, 4) != 0U;
     }
 
