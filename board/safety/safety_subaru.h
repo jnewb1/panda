@@ -73,7 +73,7 @@ const CanMsg SUBARU_LONG_TX_MSGS[] = {
 
 const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {ES_LKAS, 0, 8},
-  {ES_Distance, 1, 8},
+  {ES_Distance, 0, 8},
   {ES_DashStatus, 0, 8},
   {ES_LKAS_State, 0, 8}
 };
