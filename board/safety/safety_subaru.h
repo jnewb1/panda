@@ -132,10 +132,9 @@ AddrCheckStruct subaru_gen2_first_panda_addr_checks[] = {
 addr_checks subaru_gen2_first_panda_rx_checks = {subaru_gen2_first_panda_addr_checks, SUBARU_GEN2_FIRST_PANDA_ADDR_CHECK_LEN};
 
 AddrCheckStruct subaru_gen2_second_panda_addr_checks[] = {
- {.msg = {{Wheel_Speeds, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{Brake_Status, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{CruiseControl, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
-
+ {.msg = {{Wheel_Speeds, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
  };
 #define SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN (sizeof(subaru_gen2_second_panda_addr_checks) / sizeof(subaru_gen2_second_panda_addr_checks[0]))
 addr_checks subaru_gen2_second_panda_rx_checks = {subaru_gen2_second_panda_addr_checks, SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN};
