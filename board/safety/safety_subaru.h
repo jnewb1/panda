@@ -49,6 +49,7 @@ const int ES_Distance = 0x221;
 const int ES_Status =  0x222;
 const int ES_DashStatus = 0x321;
 const int ES_LKAS_State = 0x322;
+const int INFOTAINMENT_STATUS = 0x323;
 
 const int MAIN_BUS = 0;
 const int ALT_BUS = 1;
@@ -58,7 +59,8 @@ const CanMsg SUBARU_TX_MSGS[] = {
   {ES_LKAS, MAIN_BUS, 8},
   {ES_Distance, MAIN_BUS, 8},
   {ES_DashStatus, MAIN_BUS, 8},
-  {ES_LKAS_State, MAIN_BUS, 8}
+  {ES_LKAS_State, MAIN_BUS, 8},
+  {INFOTAINMENT_STATUS, MAIN_BUS, 8}
 };
 #define SUBARU_TX_MSGS_LEN (sizeof(SUBARU_TX_MSGS) / sizeof(SUBARU_TX_MSGS[0]))
 
@@ -67,6 +69,7 @@ const CanMsg SUBARU_LONG_TX_MSGS[] = {
   {ES_Distance, MAIN_BUS, 8},
   {ES_DashStatus, MAIN_BUS, 8},
   {ES_LKAS_State, MAIN_BUS, 8},
+  {INFOTAINMENT_STATUS, MAIN_BUS, 8},
 
   {ES_Brake, MAIN_BUS, 8},
   {ES_Status, MAIN_BUS, 8},
@@ -80,7 +83,9 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {ES_LKAS, MAIN_BUS, 8},
   {ES_Distance, ALT_BUS, 8},
   {ES_DashStatus, MAIN_BUS, 8},
-  {ES_LKAS_State, MAIN_BUS, 8}
+  {ES_LKAS_State, MAIN_BUS, 8},
+  {ES_LKAS_State, MAIN_BUS, 8},
+  {INFOTAINMENT_STATUS, MAIN_BUS, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
 
@@ -88,7 +93,8 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
 const CanMsg SUBARU_GEN2_FIRST_PANDA_TX_MSGS[] = {
   {ES_LKAS, MAIN_BUS, 8},
   {ES_DashStatus, MAIN_BUS, 8},
-  {ES_LKAS_State, MAIN_BUS, 8}
+  {ES_LKAS_State, MAIN_BUS, 8},
+  {INFOTAINMENT_STATUS, MAIN_BUS, 8}
 };
 #define SUBARU_GEN2_FIRST_PANDA_TX_MSGS_LEN (sizeof(SUBARU_GEN2_FIRST_PANDA_TX_MSGS) / sizeof(SUBARU_GEN2_FIRST_PANDA_TX_MSGS[0]))
 
@@ -281,7 +287,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   return tx;
 }
 
-static int subaru_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
+static int subaru_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
   int addr = GET_ADDR(to_fwd);
@@ -296,7 +302,7 @@ static int subaru_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 
   if (bus_num == CAMERA_BUS) {
     // Global Platform
-    bool block_common = (addr == ES_LKAS) || (addr == ES_DashStatus) || (addr == ES_LKAS_State);
+    bool block_common = (addr == ES_LKAS) || (addr == ES_DashStatus) || (addr == ES_LKAS_State) || (addr == INFOTAINMENT_STATUS);
     bool block_long = (addr == ES_Brake) || (addr == ES_Distance) || (addr == ES_Status);
     bool block_msg = block_common || (subaru_longitudinal && block_long);
     if (!block_msg) {
