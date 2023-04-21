@@ -290,8 +290,6 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 static int subaru_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
-  int addr = GET_ADDR(to_fwd);
-
   if (bus_num == MAIN_BUS) {
     // Global Platform
     bool block_msg = subaru_longitudinal && ((addr == Brake_Status) || (addr == CruiseControl));
