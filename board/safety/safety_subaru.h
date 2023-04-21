@@ -183,8 +183,8 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
   if (valid) {
     const int bus = GET_BUS(to_push);
 
-    int ALT_ES_BUS = (subaru_gen2 && !subaru_using_second_panda) ? 1 : 0;
-    int ALT_MAIN_BUS = (subaru_gen2 && !subaru_using_second_panda) ? 1 : 2;
+    int ALT_ES_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 0;
+    int ALT_MAIN_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 2;
 
     int addr = GET_ADDR(to_push);
     if ((addr == Steering_Torque) && (bus == ES_BUS)) {
@@ -239,7 +239,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
         tx_long = msg_allowed(to_send, SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS, SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS_LEN);
       }
       else{
-        tx_lkas = msg_allowed(to_send, SUBARU_GEN2_FIRST_PANDA_TX_MSGS, SUBARU_GEN2_FIRST_PANDA_TX_MSGS);
+        tx_lkas = msg_allowed(to_send, SUBARU_GEN2_FIRST_PANDA_TX_MSGS, SUBARU_GEN2_FIRST_PANDA_TX_MSGS_LEN);
       }
     }
     else{
@@ -296,8 +296,8 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 static int subaru_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
   
-  int ALT_ES_BUS = (subaru_gen2 && !subaru_using_second_panda) ? -1 : 0;
-  int ALT_MAIN_BUS = (subaru_gen2 && !subaru_using_second_panda) ? -1 : 2;
+  int ALT_ES_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? -1 : 0;
+  int ALT_MAIN_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? -1 : 2;
 
   if (bus_num == ALT_MAIN_BUS) {
     // Global Platform
