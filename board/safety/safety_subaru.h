@@ -51,87 +51,107 @@ const int ES_DashStatus = 0x321;
 const int ES_LKAS_State = 0x322;
 
 const int MAIN_BUS = 0;
+const int ALT_BUS = 1;
 const int CAMERA_BUS = 2;
 
 const CanMsg SUBARU_TX_MSGS[] = {
-  {ES_LKAS, 0, 8},
-  {ES_Distance, 0, 8},
-  {ES_DashStatus, 0, 8},
-  {ES_LKAS_State, 0, 8}
+  {ES_LKAS, MAIN_BUS, 8},
+  {ES_Distance, MAIN_BUS, 8},
+  {ES_DashStatus, MAIN_BUS, 8},
+  {ES_LKAS_State, MAIN_BUS, 8}
 };
 #define SUBARU_TX_MSGS_LEN (sizeof(SUBARU_TX_MSGS) / sizeof(SUBARU_TX_MSGS[0]))
 
 const CanMsg SUBARU_LONG_TX_MSGS[] = {
-  {ES_LKAS, 0, 8},
-  {ES_Distance, 0, 8},
-  {ES_DashStatus, 0, 8},
-  {ES_LKAS_State, 0, 8},
+  {ES_LKAS, MAIN_BUS, 8},
+  {ES_Distance, MAIN_BUS, 8},
+  {ES_DashStatus, MAIN_BUS, 8},
+  {ES_LKAS_State, MAIN_BUS, 8},
 
-  {ES_Brake, 0, 8},
-  {ES_Status, 0, 8},
-  {Brake_Status, 2, 8},
-  {CruiseControl, 2, 8}
+  {ES_Brake, MAIN_BUS, 8},
+  {ES_Status, MAIN_BUS, 8},
+  {Brake_Status, CAMERA_BUS, 8},
+  {CruiseControl, CAMERA_BUS, 8}
 };
 #define SUBARU_LONG_TX_MSGS_LEN (sizeof(SUBARU_LONG_TX_MSGS) / sizeof(SUBARU_LONG_TX_MSGS[0]))
 
+// Without second panda
 const CanMsg SUBARU_GEN2_TX_MSGS[] = {
-  {ES_LKAS, 0, 8},
-  {ES_Distance, 0, 8},
-  {ES_Distance, 1, 8},
-  {ES_DashStatus, 0, 8},
-  {ES_LKAS_State, 0, 8}
+  {ES_LKAS, MAIN_BUS, 8},
+  {ES_Distance, ALT_BUS, 8},
+  {ES_DashStatus, MAIN_BUS, 8},
+  {ES_LKAS_State, MAIN_BUS, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
 
-// Using second panda
-const CanMsg SUBARU_GEN2_LONG_TX_MSGS[] = {
-  {ES_LKAS, 0, 8},
-  {ES_Distance, 0, 8},
-  {ES_Distance, 1, 8},
-  {ES_DashStatus, 0, 8},
-  {ES_LKAS_State, 0, 8},
-
-  {ES_Brake, 0, 8},
-  {ES_Status, 0, 8},
-  {Brake_Status, 2, 8},
-  {CruiseControl, 2, 8}
+// With second panda
+const CanMsg SUBARU_GEN2_FIRST_PANDA_TX_MSGS[] = {
+  {ES_LKAS, MAIN_BUS, 8},
+  {ES_DashStatus, MAIN_BUS, 8},
+  {ES_LKAS_State, MAIN_BUS, 8}
 };
-#define SUBARU_GEN2_LONG_TX_MSGS_LEN (sizeof(SUBARU_GEN2_LONG_TX_MSGS) / sizeof(SUBARU_GEN2_LONG_TX_MSGS[0]))
+#define SUBARU_GEN2_FIRST_PANDA_TX_MSGS_LEN (sizeof(SUBARU_GEN2_FIRST_PANDA_TX_MSGS) / sizeof(SUBARU_GEN2_FIRST_PANDA_TX_MSGS[0]))
+
+const CanMsg SUBARU_GEN2_SECOND_PANDA_TX_MSGS[] = {
+  {ES_Distance, MAIN_BUS, 8},
+
+  {ES_Brake, MAIN_BUS, 8},
+  {ES_Status, MAIN_BUS, 8},
+  {Brake_Status, CAMERA_BUS, 8},
+  {CruiseControl, CAMERA_BUS, 8}
+};
+#define SUBARU_GEN2_SECOND_PANDA_TX_MSGS_LEN (sizeof(SUBARU_GEN2_SECOND_PANDA_TX_MSGS) / sizeof(SUBARU_GEN2_SECOND_PANDA_TX_MSGS[0]))
 
 
 AddrCheckStruct subaru_addr_checks[] = {
-  {.msg = {{Throttle, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{Steering_Torque, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{Wheel_Speeds, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{Brake_Status, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{CruiseControl, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
+  {.msg = {{Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Steering_Torque, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Wheel_Speeds, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
 };
 #define SUBARU_ADDR_CHECK_LEN (sizeof(subaru_addr_checks) / sizeof(subaru_addr_checks[0]))
 addr_checks subaru_rx_checks = {subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
 
 AddrCheckStruct subaru_gen2_addr_checks[] = {
-  {.msg = {{Throttle, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
-  {.msg = {{Steering_Torque, 0, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}}
+  {.msg = {{ Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Steering_Torque, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Wheel_Speeds, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
 };
 #define SUBARU_GEN2_ADDR_CHECK_LEN (sizeof(subaru_gen2_addr_checks) / sizeof(subaru_gen2_addr_checks[0]))
 addr_checks subaru_gen2_rx_checks = {subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_CHECK_LEN};
 
+// with second panda
+AddrCheckStruct subaru_gen2_first_panda_addr_checks[] = {
+  {.msg = {{ Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Steering_Torque, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  };
+#define SUBARU_GEN2_FIRST_PANDA_ADDR_CHECK_LEN (sizeof(subaru_gen2_first_panda_addr_checks) / sizeof(subaru_gen2_first_panda_addr_checks[0]))
+addr_checks subaru_gen2_first_panda_rx_checks = {subaru_gen2_first_panda_addr_checks, SUBARU_GEN2_FIRST_PANDA_ADDR_CHECK_LEN};
+
 AddrCheckStruct subaru_gen2_second_panda_addr_checks[] = {
-  {.msg = {{Wheel_Speeds, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{Brake_Status, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
-  {.msg = {{CruiseControl, 2, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
-};
+ {.msg = {{Wheel_Speeds, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{Brake_Status, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
+  {.msg = {{CruiseControl, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
+
+ };
 #define SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN (sizeof(subaru_gen2_second_panda_addr_checks) / sizeof(subaru_gen2_second_panda_addr_checks[0]))
 addr_checks subaru_gen2_second_panda_rx_checks = {subaru_gen2_second_panda_addr_checks, SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN};
 
-
 const uint16_t SUBARU_PARAM_GEN2 = 1;
 const uint16_t SUBARU_PARAM_LONGITUDINAL = 2;
-const uint16_t SUBARU_PARAM_GEN2_SECOND_PANDA = 64;
+
+// if we are using the second panda for gen2
+const uint16_t SUBARU_PARAM_GEN2_USING_SECOND_PANDA = 32;
+// whether this is the second panda for gen2
+const uint16_t SUBARU_PARAM_GEN2_IS_SECOND_PANDA = 64;
 
 bool subaru_gen2 = false;
 bool subaru_longitudinal = false;
-bool subaru_gen2_second_panda = false;
+bool subaru_gen2_using_second_panda = false;
+bool subaru_gen2_is_second_panda = false;
 
 bool subaru_aeb = false;
 
@@ -207,21 +227,24 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   int addr = GET_ADDR(to_send);
   bool violation = false;
 
-  if (subaru_longitudinal){
-    if (subaru_gen2) {
-      tx = msg_allowed(to_send, SUBARU_GEN2_LONG_TX_MSGS, SUBARU_GEN2_LONG_TX_MSGS_LEN);
+  if(subaru_gen2){
+    if(subaru_gen2_using_second_panda){
+      if(subaru_gen2_is_second_panda){
+        tx = msg_allowed(to_send, SUBARU_GEN2_SECOND_PANDA_TX_MSGS, SUBARU_GEN2_SECOND_PANDA_TX_MSGS_LEN);
+      }
+      else{
+        tx = msg_allowed(to_send, SUBARU_GEN2_FIRST_PANDA_TX_MSGS, SUBARU_GEN2_FIRST_PANDA_TX_MSGS_LEN);
+      }
     }
     else{
-      tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
-    }
-  }
-  else{
-    if (subaru_gen2) {
       tx = msg_allowed(to_send, SUBARU_GEN2_TX_MSGS, SUBARU_GEN2_TX_MSGS_LEN);
     }
-    else{
-      tx = msg_allowed(to_send, SUBARU_TX_MSGS, SUBARU_TX_MSGS_LEN);
-    }
+  }
+  else if (subaru_longitudinal){
+    tx = msg_allowed(to_send, SUBARU_LONG_TX_MSGS, SUBARU_LONG_TX_MSGS_LEN);
+  }
+  else{
+    tx = msg_allowed(to_send, SUBARU_TX_MSGS, SUBARU_TX_MSGS_LEN);
   }
 
   // steer cmd checks
@@ -287,15 +310,21 @@ static int subaru_fwd_hook(int bus_num, CANPacket_t *to_fwd) {
 
 static const addr_checks* subaru_init(uint16_t param) {
   subaru_gen2 = GET_FLAG(param, SUBARU_PARAM_GEN2);
-
+  
 #ifdef ALLOW_DEBUG
   subaru_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
-  subaru_gen2_second_panda = GET_FLAG(param, SUBARU_PARAM_GEN2_SECOND_PANDA);
+  subaru_gen2_using_second_panda = GET_FLAG(param, SUBARU_PARAM_GEN2_USING_SECOND_PANDA);
+  subaru_gen2_is_second_panda = GET_FLAG(param, SUBARU_PARAM_GEN2_IS_SECOND_PANDA);
 #endif
 
   if (subaru_gen2) {
-    if(subaru_gen2_second_panda){
-      subaru_rx_checks = (addr_checks){subaru_gen2_second_panda_addr_checks, SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN};
+    if(subaru_gen2_using_second_panda){
+      if(subaru_gen2_is_second_panda){
+        subaru_rx_checks = (addr_checks){subaru_gen2_second_panda_addr_checks, SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN};
+      }
+      else{
+        subaru_rx_checks = (addr_checks){subaru_gen2_first_panda_addr_checks, SUBARU_GEN2_FIRST_PANDA_ADDR_CHECK_LEN};
+      }
     }
     else{
       subaru_rx_checks = (addr_checks){subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_CHECK_LEN};
