@@ -105,7 +105,6 @@ const CanMsg SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS[] = {
 };
 #define SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS_LEN (sizeof(SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS) / sizeof(SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS[0]))
 
-
 AddrCheckStruct subaru_addr_checks[] = {
   {.msg = {{Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{Steering_Torque, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
@@ -114,7 +113,9 @@ AddrCheckStruct subaru_addr_checks[] = {
   {.msg = {{CruiseControl, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 50000U}, { 0 }, { 0 }}},
 };
 #define SUBARU_ADDR_CHECK_LEN (sizeof(subaru_addr_checks) / sizeof(subaru_addr_checks[0]))
-addr_checks subaru_rx_checks = {subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
+addr_checks subaru_gen1_rx_checks = {subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
+
+addr_checks subaru_rx_checks;
 
 AddrCheckStruct subaru_gen2_addr_checks[] = {
   {.msg = {{ Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
@@ -183,11 +184,11 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
   if (valid) {
     const int bus = GET_BUS(to_push);
 
-    int ALT_ES_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 0;
-    int ALT_MAIN_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 2;
+    int ALT_MAIN_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 0;
+    int ALT_ES_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? 1 : 2;
 
     int addr = GET_ADDR(to_push);
-    if ((addr == Steering_Torque) && (bus == ES_BUS)) {
+    if ((addr == Steering_Torque) && (bus == MAIN_BUS)) {
       int torque_driver_new;
       torque_driver_new = ((GET_BYTES_04(to_push) >> 16) & 0x7FFU);
       torque_driver_new = -1 * to_signed(torque_driver_new, 11);
@@ -195,30 +196,30 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     // ES_Brake Cruise_Brake_Active
-    if ((addr == ES_Brake) && (bus == ALT_MAIN_BUS)) {
+    if ((addr == ES_Brake) && (bus == ALT_ES_BUS)) {
       subaru_aeb = GET_BIT(to_push, 38U) != 0U;
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if ((addr == CruiseControl) && (bus == ALT_ES_BUS)) {
+    if ((addr == CruiseControl) && (bus == ALT_MAIN_BUS)) {
       bool cruise_engaged = GET_BIT(to_push, 41U) != 0U;
       pcm_cruise_check(cruise_engaged);
     }
 
     // update vehicle moving with any non-zero wheel speed
-    if ((addr == Wheel_Speeds) && (bus == ALT_ES_BUS)) {
+    if ((addr == Wheel_Speeds) && (bus == ALT_MAIN_BUS)) {
       vehicle_moving = ((GET_BYTES_04(to_push) >> 12) != 0U) || (GET_BYTES_48(to_push) != 0U);
     }
 
-    if ((addr == Brake_Status) && (bus == ALT_ES_BUS)) {
+    if ((addr == Brake_Status) && (bus == ALT_MAIN_BUS)) {
       brake_pressed = ((GET_BYTE(to_push, 7) >> 6) & 1U);
     }
 
-    if ((addr == Throttle) && (bus == ALT_ES_BUS)) {
+    if ((addr == Throttle) && (bus == MAIN_BUS)) {
       gas_pressed = GET_BYTE(to_push, 4) != 0U;
     }
 
-    generic_rx_checks((addr == ES_LKAS) && (bus == 0));
+    generic_rx_checks((addr == ES_LKAS) && (bus == MAIN_BUS));
   }
   return valid;
 }
@@ -329,17 +330,18 @@ static const addr_checks* subaru_init(uint16_t param) {
   if (subaru_gen2) {
     if(subaru_gen2_using_second_panda){
       if(subaru_gen2_is_second_panda){
-        subaru_rx_checks = (addr_checks){subaru_gen2_second_panda_addr_checks, SUBARU_GEN2_SECOND_PANDA_ADDR_CHECK_LEN};
+        subaru_rx_checks = subaru_gen2_second_panda_rx_checks;
       }
       else{
-        subaru_rx_checks = (addr_checks){subaru_gen2_first_panda_addr_checks, SUBARU_GEN2_FIRST_PANDA_ADDR_CHECK_LEN};
+        subaru_rx_checks = subaru_gen2_first_panda_rx_checks;
       }
     }
     else{
-      subaru_rx_checks = (addr_checks){subaru_gen2_addr_checks, SUBARU_GEN2_ADDR_CHECK_LEN};
+      subaru_rx_checks = subaru_gen2_rx_checks;
     }
-  } else {
-    subaru_rx_checks = (addr_checks){subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
+  }
+  else{
+    subaru_rx_checks = subaru_gen1_rx_checks;
   }
 
   return &subaru_rx_checks;
