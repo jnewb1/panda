@@ -296,24 +296,21 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 static int subaru_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
   
-  int ALT_ES_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? -1 : 0;
-  int ALT_MAIN_BUS = (subaru_gen2 && !subaru_gen2_using_second_panda) ? -1 : 2;
-
-  if (bus_num == ALT_MAIN_BUS) {
+  if (bus_num == MAIN_BUS) {
     // Global Platform
     bool block_msg = subaru_longitudinal && ((addr == Brake_Status) || (addr == CruiseControl));
     if (!block_msg) {
-      bus_fwd = ALT_ES_BUS;  // to the eyesight camera
+      bus_fwd = ES_BUS;  // to the eyesight camera
     }
   }
 
-  if (bus_num == ALT_ES_BUS) {
+  if (bus_num == ES_BUS) {
     // Global Platform
     bool block_common = (addr == ES_LKAS) || (addr == ES_DashStatus) || (addr == ES_LKAS_State) || (addr == INFOTAINMENT_STATUS);
     bool block_long = (addr == ES_Brake) || (addr == ES_Distance) || (addr == ES_Status);
     bool block_msg = block_common || (subaru_longitudinal && block_long);
     if (!block_msg) {
-      bus_fwd = ALT_MAIN_BUS;  // Main CAN
+      bus_fwd = MAIN_BUS;  // Main CAN
     }
   }
 
