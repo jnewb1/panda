@@ -53,7 +53,7 @@ const int INFOTAINMENT_STATUS = 0x323;
 
 const int MAIN_BUS = 0;
 const int ALT_BUS = 1;
-const int CAMERA_BUS = 2;
+const int ES_BUS = 2;
 
 const CanMsg SUBARU_TX_MSGS[] = {
   {ES_LKAS, MAIN_BUS, 8},
@@ -67,8 +67,8 @@ const CanMsg SUBARU_TX_MSGS[] = {
 const CanMsg SUBARU_LONG_TX_MSGS[] = {
   {ES_Brake, MAIN_BUS, 8},
   {ES_Status, MAIN_BUS, 8},
-  {Brake_Status, CAMERA_BUS, 8},
-  {CruiseControl, CAMERA_BUS, 8}
+  {Brake_Status, ES_BUS, 8},
+  {CruiseControl, ES_BUS, 8}
 };
 #define SUBARU_LONG_TX_MSGS_LEN (sizeof(SUBARU_LONG_TX_MSGS) / sizeof(SUBARU_LONG_TX_MSGS[0]))
 
@@ -100,8 +100,8 @@ const CanMsg SUBARU_GEN2_SECOND_PANDA_TX_MSGS[] = {
 const CanMsg SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS[] = {
   {ES_Brake, MAIN_BUS, 8},
   {ES_Status, MAIN_BUS, 8},
-  {Brake_Status, CAMERA_BUS, 8},
-  {CruiseControl, CAMERA_BUS, 8}
+  {Brake_Status, ES_BUS, 8},
+  {CruiseControl, ES_BUS, 8}
 };
 #define SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS_LEN (sizeof(SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS) / sizeof(SUBARU_GEN2_SECOND_PANDA_LONG_TX_MSGS[0]))
 
@@ -183,11 +183,11 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
   if (valid) {
     const int bus = GET_BUS(to_push);
 
-    const int alt_bus = 0;
-    const int alt_bus2 = 2;
+    int ALT_ES_BUS = (subaru_gen2 && !subaru_using_second_panda) ? 1 : 0;
+    int ALT_MAIN_BUS = (subaru_gen2 && !subaru_using_second_panda) ? 1 : 2;
 
     int addr = GET_ADDR(to_push);
-    if ((addr == Steering_Torque) && (bus == 0)) {
+    if ((addr == Steering_Torque) && (bus == ES_BUS)) {
       int torque_driver_new;
       torque_driver_new = ((GET_BYTES_04(to_push) >> 16) & 0x7FFU);
       torque_driver_new = -1 * to_signed(torque_driver_new, 11);
@@ -195,26 +195,26 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     // ES_Brake Cruise_Brake_Active
-    if ((addr == ES_Brake) && (bus == alt_bus2)) {
+    if ((addr == ES_Brake) && (bus == ALT_MAIN_BUS)) {
       subaru_aeb = GET_BIT(to_push, 38U) != 0U;
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if ((addr == CruiseControl) && (bus == alt_bus)) {
+    if ((addr == CruiseControl) && (bus == ALT_ES_BUS)) {
       bool cruise_engaged = GET_BIT(to_push, 41U) != 0U;
       pcm_cruise_check(cruise_engaged);
     }
 
     // update vehicle moving with any non-zero wheel speed
-    if ((addr == Wheel_Speeds) && (bus == alt_bus)) {
+    if ((addr == Wheel_Speeds) && (bus == ALT_ES_BUS)) {
       vehicle_moving = ((GET_BYTES_04(to_push) >> 12) != 0U) || (GET_BYTES_48(to_push) != 0U);
     }
 
-    if ((addr == Brake_Status) && (bus == alt_bus)) {
+    if ((addr == Brake_Status) && (bus == ALT_ES_BUS)) {
       brake_pressed = ((GET_BYTE(to_push, 7) >> 6) & 1U);
     }
 
-    if ((addr == Throttle) && (bus == 0)) {
+    if ((addr == Throttle) && (bus == ALT_ES_BUS)) {
       gas_pressed = GET_BYTE(to_push, 4) != 0U;
     }
 
@@ -295,22 +295,25 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 
 static int subaru_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
+  
+  int ALT_ES_BUS = (subaru_gen2 && !subaru_using_second_panda) ? -1 : 0;
+  int ALT_MAIN_BUS = (subaru_gen2 && !subaru_using_second_panda) ? -1 : 2;
 
-  if (bus_num == MAIN_BUS) {
+  if (bus_num == ALT_MAIN_BUS) {
     // Global Platform
     bool block_msg = subaru_longitudinal && ((addr == Brake_Status) || (addr == CruiseControl));
     if (!block_msg) {
-      bus_fwd = CAMERA_BUS;  // to the eyesight camera
+      bus_fwd = ALT_ES_BUS;  // to the eyesight camera
     }
   }
 
-  if (bus_num == CAMERA_BUS) {
+  if (bus_num == ALT_ES_BUS) {
     // Global Platform
     bool block_common = (addr == ES_LKAS) || (addr == ES_DashStatus) || (addr == ES_LKAS_State) || (addr == INFOTAINMENT_STATUS);
     bool block_long = (addr == ES_Brake) || (addr == ES_Distance) || (addr == ES_Status);
     bool block_msg = block_common || (subaru_longitudinal && block_long);
     if (!block_msg) {
-      bus_fwd = MAIN_BUS;  // Main CAN
+      bus_fwd = ALT_MAIN_BUS;  // Main CAN
     }
   }
 
