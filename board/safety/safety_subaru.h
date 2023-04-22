@@ -118,7 +118,7 @@ addr_checks subaru_gen1_rx_checks = {subaru_addr_checks, SUBARU_ADDR_CHECK_LEN};
 addr_checks subaru_rx_checks;
 
 AddrCheckStruct subaru_gen2_addr_checks[] = {
-  {.msg = {{ Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
+  {.msg = {{Throttle, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 10000U}, { 0 }, { 0 }}},
   {.msg = {{Steering_Torque, MAIN_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
   {.msg = {{Wheel_Speeds, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
   {.msg = {{Brake_Status, ALT_BUS, 8, .check_checksum = true, .max_counter = 15U, .expected_timestep = 20000U}, { 0 }, { 0 }}},
@@ -177,7 +177,6 @@ static uint32_t subaru_compute_checksum(CANPacket_t *to_push) {
 }
 
 static int subaru_rx_hook(CANPacket_t *to_push) {
-
   bool valid = addr_safety_check(to_push, &subaru_rx_checks,
                                  subaru_get_checksum, subaru_compute_checksum, subaru_get_counter, NULL);
 
