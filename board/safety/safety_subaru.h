@@ -1,3 +1,4 @@
+
 const SteeringLimits SUBARU_STEERING_LIMITS = {
   .max_steer = 2047,
   .max_rt_delta = 940,
@@ -249,6 +250,8 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   else{
     tx = tx_lkas;
   }
+
+  printf("%#010x\n", addr);
 
   // steer cmd checks
   if (addr == ES_LKAS) {

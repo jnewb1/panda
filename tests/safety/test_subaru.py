@@ -77,6 +77,34 @@ class TestSubaruGen2Safety(TestSubaruSafety):
     self.safety.set_safety_hooks(Panda.SAFETY_SUBARU, Panda.FLAG_SUBARU_GEN2)
     self.safety.init_tests()
 
+class TestSubaruGen2FirstPandaSafety(TestSubaruSafety):
+  TX_MSGS = [[0x122, 0], [0x321, 0], [0x322, 0], [0x323, 0]]
+  ALT_BUS = 4
+
+  MAX_RATE_UP = 40
+  MAX_RATE_DOWN = 40
+  MAX_TORQUE = 1000
+
+  def setUp(self):
+    self.packer = CANPackerPanda("subaru_global_2017_generated")
+    self.safety = libpanda_py.libpanda
+    self.safety.set_safety_hooks(Panda.SAFETY_SUBARU, Panda.FLAG_SUBARU_GEN2 | Panda.FLAG_SUBARU_GEN2_USING_SECOND_PANDA)
+    self.safety.init_tests()
+
+class TestSubaruGen2SecondPandaSafety(TestSubaruSafety):
+  TX_MSGS = [[0x221, 0]]
+  ALT_BUS = 6
+
+  MAX_RATE_UP = 40
+  MAX_RATE_DOWN = 40
+  MAX_TORQUE = 1000
+
+  def setUp(self):
+    self.packer = CANPackerPanda("subaru_global_2017_generated")
+    self.safety = libpanda_py.libpanda
+    self.safety.set_safety_hooks(Panda.SAFETY_SUBARU, Panda.FLAG_SUBARU_GEN2 | Panda.FLAG_SUBARU_GEN2_USING_SECOND_PANDA | Panda.FLAG_SUBARU_GEN2_IS_SECOND_PANDA)
+    self.safety.init_tests()
+
 class TestSubaruLongitudinalSafety(TestSubaruSafety):
   TX_MSGS = [[0x122, 0], [0x220, 0], [0x221, 0], [0x222, 0], [0x321, 0], [0x322, 0], [0x240, 2], [0x13c, 2]]
   FWD_BLACKLISTED_ADDRS = {0: [0x240, 0x13c], 2: [0x122, 0x220, 0x221, 0x222, 0x321, 0x322]}
