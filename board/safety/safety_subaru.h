@@ -196,7 +196,6 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     //   pcm_cruise_check(cruise_engaged);
     // }
 
-    cruise_engaged = true;
     controls_allowed = true;
 
     // update vehicle moving with any non-zero wheel speed
