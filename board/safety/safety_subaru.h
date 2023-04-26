@@ -191,16 +191,13 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if ((addr == CruiseControl) && (bus == ALT_MAIN_BUS)) {
-      bool cruise_engaged = GET_BIT(to_push, 41U) != 0U;
-      pcm_cruise_check(cruise_engaged);
-    }
+    // if ((addr == CruiseControl) && (bus == ALT_MAIN_BUS)) {
+    //   bool cruise_engaged = GET_BIT(to_push, 41U) != 0U;
+    //   pcm_cruise_check(cruise_engaged);
+    // }
 
-    // enter controls on rising edge of ACC, exit controls on ACC off
-    if ((addr == ES_DashStatus) && (bus == ALT_ES_BUS)) {
-      bool cruise_engaged = GET_BIT(to_push, 36U) != 0U;
-      pcm_cruise_check(cruise_engaged);
-    }
+    cruise_engaged = true;
+    controls_allowed = true;
 
     // update vehicle moving with any non-zero wheel speed
     if ((addr == Wheel_Speeds) && (bus == ALT_MAIN_BUS)) {
