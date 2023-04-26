@@ -70,7 +70,6 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {ES_Distance, ALT_BUS, 8},
   {ES_DashStatus, MAIN_BUS, 8},
   {ES_LKAS_State, MAIN_BUS, 8},
-  {ES_LKAS_State, MAIN_BUS, 8},
   {INFOTAINMENT_STATUS, MAIN_BUS, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
@@ -197,6 +196,12 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
       pcm_cruise_check(cruise_engaged);
     }
 
+    // enter controls on rising edge of ACC, exit controls on ACC off
+    if ((addr == ES_DashStatus) && (bus == ALT_ES_BUS)) {
+      bool cruise_engaged = GET_BIT(to_push, 36U) != 0U;
+      pcm_cruise_check(cruise_engaged);
+    }
+
     // update vehicle moving with any non-zero wheel speed
     if ((addr == Wheel_Speeds) && (bus == ALT_MAIN_BUS)) {
       vehicle_moving = ((GET_BYTES_04(to_push) >> 12) != 0U) || (GET_BYTES_48(to_push) != 0U);
@@ -257,7 +262,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 
     const SteeringLimits limits = subaru_gen2 ? SUBARU_GEN2_STEERING_LIMITS : SUBARU_STEERING_LIMITS;
     if (steer_torque_cmd_checks(desired_torque, -1, limits)) {
-      tx = 0;
+      violation = true;
     }
   }
 
