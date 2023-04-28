@@ -35,7 +35,7 @@ const int Throttle = 0x40;
 const int Steering_Torque = 0x119;
 const int Wheel_Speeds = 0x13a;
 
-const int OPENPILOT_STATUS = 256;
+const int OPENPILOT_STATUS = 0x100;
 
 const int ES_LKAS = 0x122;
 const int ES_Brake = 0x220;
@@ -226,9 +226,11 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   int tx_long = 0;
 
   // enter controls on rising edge of ACC, exit controls on ACC off
-  if ((addr == OPENPILOT_STATUS)) {
+  if (addr == OPENPILOT_STATUS) {
     bool cruise_engaged = GET_BIT(to_send, 0U) != 0U;
     pcm_cruise_check(cruise_engaged);
+
+    return 0;
   }
 
   if(subaru_gen2){
