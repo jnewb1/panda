@@ -182,7 +182,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     int addr = GET_ADDR(to_push);
     if ((addr == Steering_Torque) && (bus == MAIN_BUS)) {
       int torque_driver_new;
-      torque_driver_new = ((GET_BYTES_04(to_push) >> 16) & 0x7FFU);
+      torque_driver_new = ((GET_BYTES(to_push, 0, 4) >> 16) & 0x7FFU);
       torque_driver_new = -1 * to_signed(torque_driver_new, 11);
       update_sample(&torque_driver, torque_driver_new);
     }
@@ -200,7 +200,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
 
     // update vehicle moving with any non-zero wheel speed
     if ((addr == Wheel_Speeds) && (bus == ALT_MAIN_BUS)) {
-      vehicle_moving = ((GET_BYTES_04(to_push) >> 12) != 0U) || (GET_BYTES_48(to_push) != 0U);
+      vehicle_moving = ((GET_BYTES(to_push, 0, 4) >> 12) != 0U) || (GET_BYTES(to_push, 4, 4) != 0U);
     }
 
     if ((addr == Brake_Status) && (bus == ALT_MAIN_BUS)) {
@@ -261,7 +261,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 
   // steer cmd checks
   if (addr == ES_LKAS) {
-    int desired_torque = ((GET_BYTES_04(to_send) >> 16) & 0x1FFFU);
+    int desired_torque = ((GET_BYTES(to_send, 0, 4) >> 16) & 0x1FFFU);
     desired_torque = -1 * to_signed(desired_torque, 13);
 
     const SteeringLimits limits = subaru_gen2 ? SUBARU_GEN2_STEERING_LIMITS : SUBARU_STEERING_LIMITS;
