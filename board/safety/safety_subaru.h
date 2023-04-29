@@ -227,7 +227,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
 
   // enter controls on rising edge of ACC, exit controls on ACC off
   if (addr == OPENPILOT_STATUS) {
-    bool cruise_engaged = GET_BIT(to_send, 0U) != 0U;
+    bool cruise_engaged = GET_BIT(to_send, 41U) != 0U;
     pcm_cruise_check(cruise_engaged);
 
     return 0;
