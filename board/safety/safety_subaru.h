@@ -230,7 +230,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     bool cruise_engaged = GET_BIT(to_send, 41U) != 0U;
     pcm_cruise_check(cruise_engaged);
 
-    return 0;
+    return 1;
   }
 
   if(subaru_gen2){
