@@ -230,6 +230,12 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     bool cruise_engaged = GET_BIT(to_send, 41U) != 0U;
     pcm_cruise_check(cruise_engaged);
 
+    vehicle_moving = GET_BIT(to_send, 42U) != 0U;
+    brake_pressed = GET_BIT(to_send, 43U) != 0U;
+    gas_pressed = GET_BIT(to_send, 44U) != 0U;
+
+    generic_rx_checks(false);
+
     return 1;
   }
 
