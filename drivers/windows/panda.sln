@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pandaJ2534DLL", "pandaJ2534DLL\pandaJ2534DLL.vcxproj", "{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}"
 EndProject
@@ -23,11 +23,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "panda_shared", "panda_shared\panda_shared.vcxitems", "{0C843279-68C7-4679-AE51-9BC463D50D1C}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		panda_shared\panda_shared.vcxitems*{0c843279-68c7-4679-ae51-9bc463d50d1c}*SharedItemsImports = 9
-		panda_shared\panda_shared.vcxitems*{5528aefb-638d-49af-b9d4-965154e7d531}*SharedItemsImports = 4
-		panda_shared\panda_shared.vcxitems*{a2bb18a5-f26b-48d6-bbb5-b83d64473c77}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
@@ -36,6 +31,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}.Debug|x64.ActiveCfg = Debug|Win32
+		{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}.Debug|x64.Build.0 = Debug|Win32
 		{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}.Debug|x86.ActiveCfg = Debug|Win32
 		{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}.Debug|x86.Build.0 = Debug|Win32
 		{A2BB18A5-F26B-48D6-BBB5-B83D64473C77}.Release|x64.ActiveCfg = Release|Win32
@@ -61,6 +57,7 @@ Global
 		{BD34DB24-F5DC-4992-A74F-05FAF731ABED}.Release|x64.ActiveCfg = Release|Win32
 		{BD34DB24-F5DC-4992-A74F-05FAF731ABED}.Release|x86.ActiveCfg = Release|Win32
 		{7912F978-B48C-4C5D-8BFD-5D1E22158E47}.Debug|x64.ActiveCfg = Debug|Win32
+		{7912F978-B48C-4C5D-8BFD-5D1E22158E47}.Debug|x64.Build.0 = Debug|Win32
 		{7912F978-B48C-4C5D-8BFD-5D1E22158E47}.Debug|x86.ActiveCfg = Debug|Win32
 		{7912F978-B48C-4C5D-8BFD-5D1E22158E47}.Debug|x86.Build.0 = Debug|Win32
 		{7912F978-B48C-4C5D-8BFD-5D1E22158E47}.Release|x64.ActiveCfg = Release|Win32
@@ -85,6 +82,11 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8AF3826E-406A-4F1C-BA80-B4D7FD4B52E1}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		panda_shared\panda_shared.vcxitems*{0c843279-68c7-4679-ae51-9bc463d50d1c}*SharedItemsImports = 9
+		panda_shared\panda_shared.vcxitems*{5528aefb-638d-49af-b9d4-965154e7d531}*SharedItemsImports = 4
+		panda_shared\panda_shared.vcxitems*{a2bb18a5-f26b-48d6-bbb5-b83d64473c77}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

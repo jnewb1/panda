@@ -16,7 +16,6 @@
 #include <linux/kernel.h>           // Contains types, macros, functions for the kernel
 #include <linux/module.h>           // Core header for loading LKMs into the kernel
 #include <linux/netdevice.h>
-#include <linux/usb.h>
 #include <linux/version.h>
 
 /* vendor and product id */
