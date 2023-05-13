@@ -1,0 +1,5 @@
+﻿  panda.cc
+C:\Users\jnewb\repos\openpilot\panda\drivers\libpanda\panda.cc(306,1): fatal  error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "pch.h"' to your source?
+  panda_comms.cc
+C:\Users\jnewb\repos\openpilot\panda\drivers\libpanda\panda_comms.cc(233,1): fatal  error C1010: unexpected end of file while looking for precompiled header. Did you forget to add '#include "pch.h"' to your source?
+  Generating Code...

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#ifndef __APPLE__
+#ifdef __linux__
 #include <linux/spi/spidev.h>
 #endif
 
