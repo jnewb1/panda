@@ -1,7 +1,7 @@
 #pragma once
 
 #include "J2534Connection.h"
-#include "panda_shared/panda.h"
+#include "libpanda/panda.h"
 
 class J2534Connection_ISO14230 : public J2534Connection {
 public:

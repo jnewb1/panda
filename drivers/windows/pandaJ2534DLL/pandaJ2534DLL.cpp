@@ -5,7 +5,7 @@
 
 #include "stdafx.h"
 #include "J2534_v0404.h"
-#include "panda_shared/panda.h"
+#include "libpanda/panda.h"
 #include "J2534Connection.h"
 #include "J2534Connection_ISO14230.h"
 #include "J2534Connection_CAN.h"
