@@ -55,7 +55,7 @@ private:
   void handle_usb_issue(int err, const char func[]);
 };
 
-#ifndef __APPLE__
+#ifdef __linux__
 class PandaSpiHandle : public PandaCommsHandle {
 public:
   PandaSpiHandle(std::string serial);

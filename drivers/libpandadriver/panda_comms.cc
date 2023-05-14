@@ -1,16 +1,14 @@
-#include "selfdrive/boardd/panda.h"
+#include "panda.h"
 
 #include <cassert>
 #include <stdexcept>
-
-#include "common/swaglog.h"
 
 static int init_usb_ctx(libusb_context **context) {
   assert(context != nullptr);
 
   int err = libusb_init(context);
   if (err != 0) {
-    LOGE("libusb initialization error");
+    //LOGE("libusb initialization error");
     return err;
   }
 
@@ -105,7 +103,7 @@ std::vector<std::string> PandaUsbHandle::list() {
 
   num_devices = libusb_get_device_list(context, &dev_list);
   if (num_devices < 0) {
-    LOGE("libusb can't get device list");
+    //LOGE("libusb can't get device list");
     goto finish;
   }
   for (size_t i = 0; i < num_devices; ++i) {
@@ -137,9 +135,9 @@ finish:
 }
 
 void PandaUsbHandle::handle_usb_issue(int err, const char func[]) {
-  LOGE_100("usb error %d \"%s\" in %s", err, libusb_strerror((enum libusb_error)err), func);
+  //LOGE_100("usb error %d \"%s\" in %s", err, libusb_strerror((enum libusb_error)err), func);
   if (err == LIBUSB_ERROR_NO_DEVICE) {
-    LOGE("lost connection");
+    //LOGE("lost connection");
     connected = false;
   }
   // TODO: check other errors, is simply retrying okay?
@@ -194,7 +192,7 @@ int PandaUsbHandle::bulk_write(unsigned char endpoint, unsigned char* data, int 
     err = libusb_bulk_transfer(dev_handle, endpoint, data, length, &transferred, timeout);
 
     if (err == LIBUSB_ERROR_TIMEOUT) {
-      LOGW("Transmit buffer full");
+      //LOGW("Transmit buffer full");
       break;
     } else if (err != 0 || length != transferred) {
       handle_usb_issue(err, __func__);
@@ -221,7 +219,7 @@ int PandaUsbHandle::bulk_read(unsigned char endpoint, unsigned char* data, int l
       break; // timeout is okay to exit, recv still happened
     } else if (err == LIBUSB_ERROR_OVERFLOW) {
       comms_healthy = false;
-      LOGE_100("overflow got 0x%x", transferred);
+      //LOGE_100("overflow got 0x%x", transferred);
     } else if (err != 0) {
       handle_usb_issue(err, __func__);
     }

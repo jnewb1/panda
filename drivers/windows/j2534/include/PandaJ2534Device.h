@@ -5,7 +5,7 @@
 #include <set>
 #include <chrono>
 #include "J2534_v0404.h"
-#include "libpanda/panda.h"
+#include "panda.h"
 #include "synchronize.h"
 #include "Action.h"
 #include "MessageTx.h"

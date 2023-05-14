@@ -1,29 +1,25 @@
-#include "selfdrive/boardd/panda.h"
+#include "panda.h"
 
 #include <cassert>
 #include <stdexcept>
-
-#include "cereal/messaging/messaging.h"
-#include "common/swaglog.h"
-#include "common/util.h"
 
 Panda::Panda(std::string serial, uint32_t bus_offset) : bus_offset(bus_offset) {
   // try USB first, then SPI
   try {
     handle = std::make_unique<PandaUsbHandle>(serial);
-    LOGW("conntected to %s over USB", serial.c_str());
+    //LOGW("conntected to %s over USB", serial.c_str());
   } catch (std::exception &e) {
-#ifndef __APPLE__
+#ifdef __linux__
     handle = std::make_unique<PandaSpiHandle>(serial);
-    LOGW("conntected to %s over SPI", serial.c_str());
+    //LOGW("conntected to %s over SPI", serial.c_str());
 #endif
   }
 
   hw_type = get_hw_type();
 
-  has_rtc = (hw_type == cereal::PandaState::PandaType::UNO) ||
-            (hw_type == cereal::PandaState::PandaType::DOS) ||
-            (hw_type == cereal::PandaState::PandaType::TRES);
+  has_rtc = (hw_type == PandaType::uno) ||
+            (hw_type == PandaType::dos) ||
+            (hw_type == PandaType::tres);
 
   can_reset_communications();
 
@@ -45,7 +41,7 @@ std::string Panda::hw_serial() {
 std::vector<std::string> Panda::list() {
   std::vector<std::string> serials = PandaUsbHandle::list();
 
-#ifndef __APPLE__
+#ifdef __linux__
   for (auto s : PandaSpiHandle::list()) {
     if (std::find(serials.begin(), serials.end(), s) == serials.end()) {
       serials.push_back(s);
@@ -56,7 +52,7 @@ std::vector<std::string> Panda::list() {
   return serials;
 }
 
-void Panda::set_safety_model(cereal::CarParams::SafetyModel safety_model, uint16_t safety_param) {
+void Panda::set_safety_model(SafetyModel safety_model, uint16_t safety_param) {
   handle->control_write(0xdc, (uint16_t)safety_model, safety_param);
 }
 
@@ -64,11 +60,11 @@ void Panda::set_alternative_experience(uint16_t alternative_experience) {
   handle->control_write(0xdf, alternative_experience, 0);
 }
 
-cereal::PandaState::PandaType Panda::get_hw_type() {
+PandaType Panda::get_hw_type() {
   unsigned char hw_query[1] = {0};
 
   handle->control_read(0xc1, 0, 0, hw_query, 1);
-  return (cereal::PandaState::PandaType)(hw_query[0]);
+  return (PandaType)(hw_query[0]);
 }
 
 void Panda::set_rtc(struct tm sys_time) {
@@ -83,7 +79,7 @@ void Panda::set_rtc(struct tm sys_time) {
 }
 
 struct tm Panda::get_rtc() {
-  struct __attribute__((packed)) timestamp_t {
+  struct timestamp_t {
     uint16_t year; // Starts at 0
     uint8_t month;
     uint8_t day;
@@ -184,31 +180,31 @@ static uint8_t len_to_dlc(uint8_t len) {
   }
 }
 
-void Panda::pack_can_buffer(const capnp::List<cereal::CanData>::Reader &can_data_list,
+void Panda::pack_can_buffer(const std::vector<CanData> &can_data_list,
                             std::function<void(uint8_t *, size_t)> write_func) {
   int32_t pos = 0;
   uint8_t send_buf[2 * USB_TX_SOFT_LIMIT];
 
   for (auto cmsg : can_data_list) {
     // check if the message is intended for this panda
-    uint8_t bus = cmsg.getSrc();
+    uint8_t bus = cmsg.src;
     if (bus < bus_offset || bus >= (bus_offset + PANDA_BUS_CNT)) {
       continue;
     }
-    auto can_data = cmsg.getDat();
+    auto can_data = cmsg.dat;
     uint8_t data_len_code = len_to_dlc(can_data.size());
     assert(can_data.size() <= 64);
     assert(can_data.size() == dlc_to_len[data_len_code]);
 
     can_header header = {};
-    header.addr = cmsg.getAddress();
-    header.extended = (cmsg.getAddress() >= 0x800) ? 1 : 0;
+    header.addr = cmsg.address;
+    header.extended = (cmsg.address >= 0x800) ? 1 : 0;
     header.data_len_code = data_len_code;
     header.bus = bus - bus_offset;
     header.checksum = 0;
 
     memcpy(&send_buf[pos], (uint8_t *)&header, sizeof(can_header));
-    memcpy(&send_buf[pos + sizeof(can_header)], (uint8_t *)can_data.begin(), can_data.size());
+    memcpy(&send_buf[pos + sizeof(can_header)], (uint8_t *)can_data[0], can_data.size());
     uint32_t msg_size = sizeof(can_header) + can_data.size();
 
     // set checksum
@@ -226,7 +222,7 @@ void Panda::pack_can_buffer(const capnp::List<cereal::CanData>::Reader &can_data
   if (pos > 0) write_func(send_buf, pos);
 }
 
-void Panda::can_send(capnp::List<cereal::CanData>::Reader can_data_list) {
+void Panda::can_send(const std::vector<CanData> &can_data_list) {
   pack_can_buffer(can_data_list, [=](uint8_t* data, size_t size) {
     handle->bulk_write(3, data, size, 5);
   });
@@ -241,7 +237,7 @@ bool Panda::can_receive(std::vector<can_frame>& out_vec) {
     return false;
   }
   if (recv == RECV_SIZE) {
-    LOGW("Panda receive buffer full");
+    //LOGW("Panda receive buffer full");
   }
   receive_buffer_size += recv;
 
@@ -277,12 +273,12 @@ bool Panda::unpack_can_buffer(uint8_t *data, uint32_t &size, std::vector<can_fra
     }
 
     if (calculate_checksum(&data[pos], sizeof(can_header) + data_len) != 0) {
-      LOGE("Panda CAN checksum failed");
+      //LOGE("Panda CAN checksum failed");
       size = 0;
       return false;
     }
 
-    canData.dat.assign((char *)&data[pos + sizeof(can_header)], data_len);
+    canData.dat.assign(data[pos + sizeof(can_header)], data_len);
 
     pos += sizeof(can_header) + data_len;
   }
