@@ -38,9 +38,6 @@
 
 #define PANDA_DLC_MASK  0x0F
 
-#define SAFETY_ALLOUTPUT 17
-#define SAFETY_SILENT 0
-
 struct panda_usb_ctx {
   struct panda_inf_priv *priv;
   u32 ndx;

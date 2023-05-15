@@ -171,7 +171,7 @@ DWORD PandaJ2534Device::can_recv_thread() {
 }
 
 DWORD PandaJ2534Device::can_process_thread() {
-	panda::PANDA_CAN_MSG msg_recv[CAN_RX_MSG_LEN];
+	CanData msg_recv[CAN_RX_MSG_LEN];
 
 	while (true) {
 		if (!WaitForSingleObject(this->thread_kill_event, 0)) {
@@ -186,14 +186,14 @@ DWORD PandaJ2534Device::can_process_thread() {
 
 		for (int i = 0; i < count; i++) {
 			auto msg_in = msg_recv[i];
-			J2534Frame msg_out(msg_in);
+			J2534Frame msg_out(msg_in, true);
 
-			if (msg_in.is_receipt) {
+			if (true) {
 				synchronized(task_queue_mutex) {
 					if (txMsgsAwaitingEcho.size() > 0) {
 						auto msgtx = txMsgsAwaitingEcho.front();
 						if (auto conn = msgtx->connection.lock()) {
-							if (conn->isProtoCan() && conn->getPort() == msg_in.bus) {
+							if (conn->isProtoCan() && conn->getPort() == msg_in.src) {
 								if (msgtx->checkTxReceipt(msg_out)) {
 									//Things to check:
 									//    Frame not for this msg: Drop frame and alert. Error?
@@ -206,7 +206,7 @@ DWORD PandaJ2534Device::can_process_thread() {
 										this->removeConnectionTopAction(conn, msgtx);
 									} else {
 										if (msgtx->txReady()) { //Not finished, ready to send next frame.
-											msgtx->schedule(msg_in.recv_time_point, TRUE);
+											msgtx->schedule(msg_in.busTime, TRUE);
 											this->insertActionIntoTaskList(msgtx);
 										} else {
 											//Not finished, but next frame not ready (maybe waiting for flow control).
@@ -226,7 +226,7 @@ DWORD PandaJ2534Device::can_process_thread() {
 				}
 			} else {
 				for (auto& conn : this->connections)
-					if (conn != nullptr && conn->isProtoCan() && conn->getPort() == msg_in.bus)
+					if (conn != nullptr && conn->isProtoCan() && conn->getPort() == msg_in.src)
 						conn->processMessage(msg_out);
 			}
 		}

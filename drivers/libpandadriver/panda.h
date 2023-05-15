@@ -105,6 +105,10 @@ struct CanData {
   uint8_t src;
 };
 
+struct KLineData {
+
+};
+
 enum PANDA_CAN_PORT_CLEAR {
   PANDA_CAN1_TX = 0,
   PANDA_CAN2_TX = 1,
@@ -154,6 +158,7 @@ public:
   void can_send(const std::vector<CanData> &can_data_list);
   bool can_receive(std::vector<can_frame>& out_vec);
   bool can_clear(PANDA_CAN_PORT_CLEAR port);
+  bool can_clear(PANDA_SERIAL_PORT port);
   void can_reset_communications();
 
   void Panda::pack_can_buffer(const std::vector<CanData> &can_data_list,

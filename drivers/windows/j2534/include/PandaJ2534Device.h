@@ -22,7 +22,7 @@ J2534Connections.
 */
 class PandaJ2534Device {
 public:
-	PandaJ2534Device(std::unique_ptr<panda::Panda> new_panda);
+	PandaJ2534Device(std::unique_ptr<Panda> new_panda);
 
 	~PandaJ2534Device();
 
@@ -31,7 +31,7 @@ public:
 	DWORD closeChannel(unsigned long ChannelID);
 	DWORD addChannel(std::shared_ptr<J2534Connection>& conn, unsigned long* channel_id);
 
-	std::unique_ptr<panda::Panda> panda;
+	std::unique_ptr<Panda> panda;
 	std::vector<std::shared_ptr<J2534Connection>> connections;
 
 	//Place the Action in the task queue based on the Action's expiration time,

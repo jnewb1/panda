@@ -252,7 +252,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruReadVersion(unsigned long DeviceID, char *p
 	if (check_valid_DeviceID(DeviceID) != STATUS_NOERROR) return J25334LastError;
 
 	auto& panda = get_device(DeviceID);
-	auto fw_version = panda->panda->get_version();
+	std::string fw_version = "1.0.0";//panda->panda->get_version();
 	strcpy_s(pFirmwareVersion, 80, fw_version.c_str());
 
 	std::string j2534dll_ver;
@@ -395,9 +395,13 @@ PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned lon
 		break;
 	}
 	case READ_VBATT:
-		panda::PANDA_HEALTH health = dev_entry->panda->get_health();
-		*(unsigned long*)pOutput = health.voltage;
+	{
+		auto health = dev_entry->panda->get_state();
+		if(health.has_value()){
+			*(unsigned long*)pOutput = health->voltage_pkt;
+		}
 		break;
+	}
 	case FIVE_BAUD_INIT:
 		if (!pInput || !pOutput) return ret_code(ERR_NULL_PARAMETER);
 		return ret_code(get_channel(ChannelID)->init5b((SBYTE_ARRAY*)pInput, (SBYTE_ARRAY*)pOutput));
