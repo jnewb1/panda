@@ -14,7 +14,7 @@ from typing import Optional
 from itertools import accumulate
 
 from .base import BaseHandle
-from .constants import McuType
+from .constants import FW_PATH, McuType
 from .dfu import PandaDFU
 from .isotp import isotp_send, isotp_recv
 from .spi import PandaSpiHandle, PandaSpiException
@@ -150,7 +150,7 @@ class Panda:
   SAFETY_NOOUTPUT = 19
   SAFETY_HONDA_BOSCH = 20
   SAFETY_VOLKSWAGEN_PQ = 21
-  SAFETY_SUBARU_LEGACY = 22
+  SAFETY_SUBARU_PREGLOBAL = 22
   SAFETY_HYUNDAI_LEGACY = 23
   SAFETY_HYUNDAI_COMMUNITY = 24
   SAFETY_STELLANTIS = 25
@@ -182,9 +182,9 @@ class Panda:
   HW_TYPE_TRES = b'\x09'
 
   CAN_PACKET_VERSION = 4
-  HEALTH_PACKET_VERSION = 12
+  HEALTH_PACKET_VERSION = 14
   CAN_HEALTH_PACKET_VERSION = 4
-  HEALTH_STRUCT = struct.Struct("<IIIIIIIIIBBBBBBHBBBHfBBH")
+  HEALTH_STRUCT = struct.Struct("<IIIIIIIIIBBBBBBHBBBHfBBHBHH")
   CAN_HEALTH_STRUCT = struct.Struct("<BIBBBBBBBBIIIIIIIHHBBB")
 
   F2_DEVICES = (HW_TYPE_PEDAL, )
@@ -193,6 +193,16 @@ class Panda:
 
   INTERNAL_DEVICES = (HW_TYPE_UNO, HW_TYPE_DOS, HW_TYPE_TRES)
   HAS_OBD = (HW_TYPE_BLACK_PANDA, HW_TYPE_UNO, HW_TYPE_DOS, HW_TYPE_RED_PANDA, HW_TYPE_RED_PANDA_V2, HW_TYPE_TRES)
+
+  MAX_FAN_RPMs = {
+    HW_TYPE_UNO: 5100,
+    HW_TYPE_DOS: 6500,
+    HW_TYPE_TRES: 6600,
+  }
+
+  HARNESS_STATUS_NC = 0
+  HARNESS_STATUS_NORMAL = 1
+  HARNESS_STATUS_FLIPPED = 2
 
   # first byte is for EPS scaling factor
   FLAG_TOYOTA_ALT_BRAKE = (1 << 8)
@@ -224,6 +234,8 @@ class Panda:
 
   FLAG_GM_HW_CAM = 1
   FLAG_GM_HW_CAM_LONG = 2
+
+  FLAG_FORD_LONG_CONTROL = 1
 
   def __init__(self, serial: Optional[str] = None, claim: bool = True, disable_checks: bool = True):
     self._connect_serial = serial
@@ -389,14 +401,16 @@ class Panda:
     return []
 
   def reset(self, enter_bootstub=False, enter_bootloader=False, reconnect=True):
+    # no response is expected since it resets right away
+    timeout = 5000 if isinstance(self._handle, PandaSpiHandle) else 15000
     try:
       if enter_bootloader:
-        self._handle.controlWrite(Panda.REQUEST_IN, 0xd1, 0, 0, b'')
+        self._handle.controlWrite(Panda.REQUEST_IN, 0xd1, 0, 0, b'', timeout=timeout)
       else:
         if enter_bootstub:
-          self._handle.controlWrite(Panda.REQUEST_IN, 0xd1, 1, 0, b'')
+          self._handle.controlWrite(Panda.REQUEST_IN, 0xd1, 1, 0, b'', timeout=timeout)
         else:
-          self._handle.controlWrite(Panda.REQUEST_IN, 0xd8, 0, 0, b'')
+          self._handle.controlWrite(Panda.REQUEST_IN, 0xd8, 0, 0, b'', timeout=timeout)
     except Exception:
       pass
     if not enter_bootloader and reconnect:
@@ -421,7 +435,7 @@ class Panda:
       except Exception:
         logging.debug("reconnecting is taking %d seconds...", i + 1)
         try:
-          dfu = PandaDFU(PandaDFU.st_serial_to_dfu_serial(self._serial, self._mcu_type))
+          dfu = PandaDFU(self.get_dfu_serial())
           dfu.recover()
         except Exception:
           pass
@@ -471,7 +485,7 @@ class Panda:
 
   def flash(self, fn=None, code=None, reconnect=True):
     if not fn:
-      fn = self._mcu_type.config.app_path
+      fn = os.path.join(FW_PATH, self._mcu_type.config.app_fn)
     assert os.path.isfile(fn)
     logging.debug("flash: main version is %s", self.get_version())
     if not self.bootstub:
@@ -492,8 +506,8 @@ class Panda:
     if reconnect:
       self.reconnect()
 
-  def recover(self, timeout: Optional[int] = None, reset: bool = True) -> bool:
-    dfu_serial = PandaDFU.st_serial_to_dfu_serial(self._serial, self._mcu_type)
+  def recover(self, timeout: Optional[int] = 60, reset: bool = True) -> bool:
+    dfu_serial = self.get_dfu_serial()
 
     if reset:
       self.reset(enter_bootstub=True)
@@ -511,18 +525,21 @@ class Panda:
     return True
 
   @staticmethod
-  def wait_for_dfu(dfu_serial: str, timeout: Optional[int] = None) -> bool:
+  def wait_for_dfu(dfu_serial: Optional[str], timeout: Optional[int] = None) -> bool:
     t_start = time.monotonic()
-    while dfu_serial not in PandaDFU.list():
+    dfu_list = PandaDFU.list()
+    while (dfu_serial is None and len(dfu_list) == 0) or (dfu_serial is not None and dfu_serial not in dfu_list):
       logging.debug("waiting for DFU...")
       time.sleep(0.1)
       if timeout is not None and (time.monotonic() - t_start) > timeout:
         return False
+      dfu_list = PandaDFU.list()
     return True
 
   def up_to_date(self) -> bool:
     current = self.get_signature()
-    expected = Panda.get_signature_from_firmware(self.get_mcu_type().config.app_path)
+    fn = os.path.join(FW_PATH, self.get_mcu_type().config.app_fn)
+    expected = Panda.get_signature_from_firmware(fn)
     return (current == expected)
 
   def call_control_api(self, msg):
@@ -559,6 +576,9 @@ class Panda:
       "fan_power": a[21],
       "safety_rx_checks_invalid": a[22],
       "spi_checksum_error_count": a[23],
+      "fan_stall_count": a[24],
+      "sbu1_voltage_mV": a[25],
+      "sbu2_voltage_mV": a[26],
     }
 
   @ensure_can_health_packet_version
@@ -676,6 +696,9 @@ class Panda:
       matches the MCU UID
     """
     return self._serial
+
+  def get_dfu_serial(self):
+    return PandaDFU.st_serial_to_dfu_serial(self._serial, self._mcu_type)
 
   def get_uid(self):
     """
