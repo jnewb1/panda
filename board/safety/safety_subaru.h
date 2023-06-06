@@ -34,7 +34,8 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {0x221, 1, 8},
   {0x321, 0, 8},
   {0x322, 0, 8},
-  {0x323, 0, 8}
+  {0x323, 0, 8},
+  {0x787, 0, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
 
