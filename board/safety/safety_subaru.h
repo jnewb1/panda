@@ -26,6 +26,7 @@ const CanMsg SUBARU_TX_MSGS[] = {
   {0x321, 0, 8},
   {0x322, 0, 8},
   {0x323, 0, 8},
+  {0x40,  2, 8}
 };
 #define SUBARU_TX_MSGS_LEN (sizeof(SUBARU_TX_MSGS) / sizeof(SUBARU_TX_MSGS[0]))
 
@@ -34,7 +35,8 @@ const CanMsg SUBARU_GEN2_TX_MSGS[] = {
   {0x221, 1, 8},
   {0x321, 0, 8},
   {0x322, 0, 8},
-  {0x323, 0, 8}
+  {0x323, 0, 8},
+  {0x40,  2, 8}
 };
 #define SUBARU_GEN2_TX_MSGS_LEN (sizeof(SUBARU_GEN2_TX_MSGS) / sizeof(SUBARU_GEN2_TX_MSGS[0]))
 
@@ -142,8 +144,14 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     if (steer_torque_cmd_checks(desired_torque, -1, limits)) {
       tx = 0;
     }
-
   }
+
+  // throttle
+  if(addr == 0x40){
+    // only allow throttle when car is stationary
+    if(vehicle_moving) tx=0;
+  }
+
   return tx;
 }
 
