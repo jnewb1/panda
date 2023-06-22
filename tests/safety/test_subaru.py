@@ -54,9 +54,9 @@ class TestSubaruSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafety
     values = {"LKAS_Output": torque}
     return self.packer.make_can_msg_panda("ES_LKAS", 0, values)
 
-  def _user_gas_msg(self, gas):
+  def _user_gas_msg(self, gas, bus=0):
     values = {"Throttle_Pedal": gas}
-    return self.packer.make_can_msg_panda("Throttle", 0, values)
+    return self.packer.make_can_msg_panda("Throttle", bus, values)
 
   def _pcm_status_msg(self, enable):
     values = {"Cruise_Activated": enable}
@@ -64,7 +64,7 @@ class TestSubaruSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafety
 
 
 class TestSubaruGen2Safety(TestSubaruSafety):
-  TX_MSGS = [[0x122, 0], [0x221, 1], [0x321, 0], [0x322, 0], [0x323, 0]]
+  TX_MSGS = [[0x122, 0], [0x221, 1], [0x321, 0], [0x322, 0], [0x323, 0], [0x40, 2]]
   ALT_BUS = 1
 
   MAX_RATE_UP = 40
@@ -76,6 +76,22 @@ class TestSubaruGen2Safety(TestSubaruSafety):
     self.safety = libpanda_py.libpanda
     self.safety.set_safety_hooks(Panda.SAFETY_SUBARU, Panda.FLAG_SUBARU_GEN2)
     self.safety.init_tests()
+  
+  def test_throttle_resume_when_stopped(self):
+    # can send throttle when car is stopped
+    self._rx(self._speed_msg(0))
+    self.assertTrue(self._tx(self._user_gas_msg(5, bus=2)))
+
+    # cant send throttle on bus 0 or 1
+    self.assertFalse(self._tx(self._user_gas_msg(5, bus=0)))
+    self.assertFalse(self._tx(self._user_gas_msg(5, bus=1)))
+
+    # cant send throttle > 5
+    self.assertFalse(self._tx(self._user_gas_msg(6, bus=2)))
+
+    # cant send when car is moving
+    self._rx(self._speed_msg(1))
+    self.assertFalse(self._tx(self._user_gas_msg(5, bus=2)))
 
 
 if __name__ == "__main__":
