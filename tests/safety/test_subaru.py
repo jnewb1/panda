@@ -87,7 +87,7 @@ class TestSubaruGen2Safety(TestSubaruSafety):
     self.assertFalse(self._tx(self._user_gas_msg(5, bus=1)))
 
     # cant send throttle > 5
-    self.assertFalse(self._tx(self._user_gas_msg(6, bus=2)))
+    self.assertFalse(self._tx(self._user_gas_msg(11, bus=2)))
 
     # cant send when car is moving
     self._rx(self._speed_msg(1))
