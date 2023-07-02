@@ -153,7 +153,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
     if(vehicle_moving) tx=0;
 
     // only allow a small amount of throttle
-    if(GET_BYTE(to_send, 4) > 10) tx=0;
+    if(GET_BYTE(to_send, 4) > 5) tx=0;
   }
 
   return tx;

@@ -7,7 +7,7 @@ from panda.tests.safety.common import CANPackerPanda
 
 
 class TestSubaruSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
-  TX_MSGS = [[0x122, 0], [0x221, 0], [0x321, 0], [0x322, 0], [0x323, 0]]
+  TX_MSGS = [[0x122, 0], [0x221, 0], [0x321, 0], [0x322, 0], [0x323, 0], [0x40, 2]]
   STANDSTILL_THRESHOLD = 0  # kph
   RELAY_MALFUNCTION_ADDR = 0x122
   RELAY_MALFUNCTION_BUS = 0
@@ -62,6 +62,21 @@ class TestSubaruSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafety
     values = {"Cruise_Activated": enable}
     return self.packer.make_can_msg_panda("CruiseControl", self.ALT_BUS, values)
 
+  def test_throttle_resume(self):
+    # can send throttle when car is stopped
+    self._rx(self._speed_msg(0))
+    self.assertTrue(self._tx(self._user_gas_msg(5, bus=2)))
+
+    # cant send throttle on bus 0
+    self.assertFalse(self._tx(self._user_gas_msg(5, bus=0)))
+
+    # cant send throttle > 5
+    self.assertFalse(self._tx(self._user_gas_msg(6, bus=2)))
+
+    # cant send when car is moving
+    self._rx(self._speed_msg(1))
+    self.assertFalse(self._tx(self._user_gas_msg(5, bus=2)))
+
 
 class TestSubaruGen2Safety(TestSubaruSafety):
   TX_MSGS = [[0x122, 0], [0x221, 1], [0x321, 0], [0x322, 0], [0x323, 0], [0x40, 1], [0x40, 2]]
@@ -76,22 +91,6 @@ class TestSubaruGen2Safety(TestSubaruSafety):
     self.safety = libpanda_py.libpanda
     self.safety.set_safety_hooks(Panda.SAFETY_SUBARU, Panda.FLAG_SUBARU_GEN2)
     self.safety.init_tests()
-  
-  def test_throttle_resume_when_stopped(self):
-    # can send throttle when car is stopped
-    self._rx(self._speed_msg(0))
-    self.assertTrue(self._tx(self._user_gas_msg(5, bus=2)))
-
-    # cant send throttle on bus 0 or 1
-    self.assertFalse(self._tx(self._user_gas_msg(5, bus=0)))
-    self.assertFalse(self._tx(self._user_gas_msg(5, bus=1)))
-
-    # cant send throttle > 5
-    self.assertFalse(self._tx(self._user_gas_msg(11, bus=2)))
-
-    # cant send when car is moving
-    self._rx(self._speed_msg(1))
-    self.assertFalse(self._tx(self._user_gas_msg(5, bus=2)))
 
 
 if __name__ == "__main__":
