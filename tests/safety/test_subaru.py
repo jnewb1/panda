@@ -65,7 +65,7 @@ class TestSubaruSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafety
 
 class TestSubaruGen2Safety(TestSubaruSafety):
   TX_MSGS = [[0x122, 0], [0x221, 1], [0x321, 0], [0x322, 0], [0x323, 0]]
-  FWD_BLACKLISTED_ADDRS = {2: [0x122, 0x321, 0x322]}
+  FWD_BLACKLISTED_ADDRS = {2: [0x122, 0x321, 0x322, 0x323]}
   ALT_BUS = 1
 
   MAX_RATE_UP = 40
@@ -80,7 +80,7 @@ class TestSubaruGen2Safety(TestSubaruSafety):
 
 class TestSubaruCrosstrekHybridSafety(TestSubaruSafety):
   TX_MSGS = [[0x122, 0], [0x321, 0], [0x322, 0]]
-  FWD_BLACKLISTED_ADDRS = {2: [0x122, 0x321, 0x322]}
+  FWD_BLACKLISTED_ADDRS = {2: [0x122, 0x321, 0x322, 0x323]}
 
   def setUp(self):
     self.packer = CANPackerPanda("subaru_global_2020_hybrid_generated")
@@ -115,7 +115,7 @@ class TestSubaruForesterHybridSafety(TestSubaruSafety):
 class TestSubaruForester2022Safety(TestSubaruSafety):
   TX_MSGS = [[0x124, 0], [0x221, 0], [0x321, 0], [0x322, 0], [0x40, 2], [0x139, 2]]
   RELAY_MALFUNCTION_ADDR = 0x124
-  FWD_BLACKLISTED_ADDRS = {0: [0x40, 0x139], 2: [0x124, 0x321, 0x322]}
+  FWD_BLACKLISTED_ADDRS = {0: [0x40, 0x139], 2: [0x124, 0x321, 0x322, 0x323]}
 
   def setUp(self):
     self.packer = CANPackerPanda("subaru_global_2022_generated")
