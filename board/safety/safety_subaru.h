@@ -149,7 +149,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
     }
 
     if ((addr == 0x321) && (bus == 2) && subaru_crosstrek_hybrid) {
-      bool cruise_engaged = ((GET_BYTES(to_push, 4, 8) >> 4) & 1U);
+      bool cruise_engaged = ((GET_BYTES(to_push, 4, 4) >> 4) & 1U);
       pcm_cruise_check(cruise_engaged);
     }
 
@@ -173,7 +173,7 @@ static int subaru_rx_hook(CANPacket_t *to_push) {
 
     // exit controls on rising edge of brake press (Brake_Hybrid)
     if ((addr == 0x226) && (bus == 1) && subaru_crosstrek_hybrid) {
-      brake_pressed = ((GET_BYTES(to_push, 4, 8) >> 5) & 1U);
+      brake_pressed = ((GET_BYTES(to_push, 4, 4) >> 5) & 1U);
     }
 
     // exit controls on rising edge of gas press (Throttle_Hybrid)
@@ -213,7 +213,7 @@ static int subaru_tx_hook(CANPacket_t *to_send) {
   }
 
   if ((addr == 0x124) && subaru_forester_2022) {
-    int desired_torque = ((GET_BYTES(to_send, 4, 8) >> 8) & 0x3FFFFU);
+    int desired_torque = ((GET_BYTES(to_send, 4, 4) >> 8) & 0x3FFFFU);
     desired_torque = -1 * to_signed(desired_torque, 17);
 
     const SteeringLimits limits = SUBARU_STEERING_LIMITS;
