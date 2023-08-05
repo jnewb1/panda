@@ -25,15 +25,33 @@ static const addr_checks* subaru_simulator_init(uint16_t param){
 static int subaru_simulator_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
+  int is_car_signal = (addr == MSG_SUBARU_CruiseControl) || (addr == MSG_SUBARU_Wheel_Speeds) || (addr == MSG_SUBARU_Brake_Status);
+  int is_cam_signal = (addr == MSG_SUBARU_ES_Brake) || (addr == MSG_SUBARU_ES_Status) || (addr == MSG_SUBARU_ES_Distance);
+
   if (bus_num == SUBARU_MAIN_BUS) {
-    if((addr == MSG_SUBARU_CruiseControl) || (addr == MSG_SUBARU_Wheel_Speeds) || (addr == MSG_SUBARU_Brake_Status)){
+    if(is_car_signal){
       bus_fwd = SUBARU_ALT_BUS;
+    }
+    else{
+      bus_fwd = SUBARU_CAM_BUS;
     }
   }
 
   if (bus_num == SUBARU_CAM_BUS) {
-    if((addr == MSG_SUBARU_ES_Brake) || (addr == MSG_SUBARU_ES_Status) || (addr == MSG_SUBARU_ES_Distance)){
+    if(is_cam_signal){
       bus_fwd = SUBARU_ALT_BUS;
+    }
+    else{
+      bus_fwd = SUBARU_MAIN_BUS;
+    }
+  }
+
+  if(bus_num == SUBARU_ALT_BUS){
+    if(is_cam_signal){
+      bus_fwd = SUBARU_MAIN_BUS;
+    }
+    if(is_car_signal){
+      bus_fwd = SUBARU_CAM_BUS;
     }
   }
 

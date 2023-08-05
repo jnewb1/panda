@@ -163,6 +163,12 @@ void tick_handler(void) {
 
     // decimated to 1Hz
     if (loop_counter == 0U) {
+      heartbeat_disabled = true;
+
+      if (current_safety_mode != SAFETY_SUBARU_GEN1_SIMULATOR) {
+        set_safety_mode(SAFETY_SUBARU_GEN1_SIMULATOR, 0U);
+      }
+
       can_live = pending_can_live;
 
       //puth(usart1_dma); print(" "); puth(DMA2_Stream5->M0AR); print(" "); puth(DMA2_Stream5->NDTR); print("\n");
