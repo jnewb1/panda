@@ -6,12 +6,22 @@ import panda.tests.safety.common as common
 from panda.tests.safety.common import CANPackerPanda
 
 
+MSG_SUBARU_PG_CruiseControl       = 0x144
+MSG_SUBARU_PG_Throttle            = 0x140
+MSG_SUBARU_PG_Wheel_Speeds        = 0xD4
+MSG_SUBARU_PG_Brake_Pedal         = 0xD1
+MSG_SUBARU_PG_ES_LKAS             = 0x164
+MSG_SUBARU_PG_ES_Brake            = 0x160
+MSG_SUBARU_PG_ES_Distance         = 0x161
+MSG_SUBARU_PG_ES_Status           = 0x162
+MSG_SUBARU_PG_Steering_Torque     = 0x371
+
 class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
-  TX_MSGS = [[0x161, 0], [0x164, 0]]
+  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0]]
   STANDSTILL_THRESHOLD = 0  # kph
-  RELAY_MALFUNCTION_ADDR = 0x164
+  RELAY_MALFUNCTION_ADDR = MSG_SUBARU_PG_ES_LKAS
   RELAY_MALFUNCTION_BUS = 0
-  FWD_BLACKLISTED_ADDRS = {2: [0x161, 0x164]}
+  FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_Distance, MSG_SUBARU_PG_ES_LKAS]}
   FWD_BUS_LOOKUP = {0: 2, 2: 0}
 
   MAX_RATE_UP = 50
@@ -24,10 +34,12 @@ class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteer
   DRIVER_TORQUE_ALLOWANCE = 75
   DRIVER_TORQUE_FACTOR = 10
 
+  FLAGS = 0
+
   def setUp(self):
     self.packer = CANPackerPanda("subaru_outback_2015_generated")
     self.safety = libpanda_py.libpanda
-    self.safety.set_safety_hooks(Panda.SAFETY_SUBARU_PREGLOBAL, 0)
+    self.safety.set_safety_hooks(Panda.SAFETY_SUBARU_PREGLOBAL, self.FLAGS)
     self.safety.init_tests()
 
   def _set_prev_torque(self, t):
@@ -60,6 +72,45 @@ class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteer
     values = {"Cruise_Activated": enable}
     return self.packer.make_can_msg_panda("CruiseControl", 0, values)
 
+
+
+class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.LongitudinalGasBrakeSafetyTest):
+  MIN_GAS = 808
+  MAX_GAS = 3400
+  INACTIVE_GAS = 1818
+  MAX_POSSIBLE_GAS = 2**12
+
+  MIN_BRAKE = 0
+  MAX_BRAKE = 600
+  MAX_POSSIBLE_BRAKE = 2**16
+
+  MIN_RPM = 0
+  MAX_RPM = 2400
+  MAX_POSSIBLE_RPM = 2**12
+
+  FLAGS = Panda.FLAG_SUBARU_LONG
+
+  FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_Brake, MSG_SUBARU_PG_ES_Distance,
+                               MSG_SUBARU_PG_ES_Status]}
+  
+  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_Brake, 0],
+             [MSG_SUBARU_PG_ES_Status, 0]]
+
+
+  def test_rpm_safety_check(self):
+    self._generic_limit_safety_check(self._send_rpm_msg, self.MIN_RPM, self.MAX_RPM, 0, self.MAX_POSSIBLE_RPM, 1)
+
+  def _send_brake_msg(self, brake):
+    values = {"Brake_Pressure": brake}
+    return self.packer.make_can_msg_panda("ES_Brake", 0, values)
+
+  def _send_gas_msg(self, gas):
+    values = {"Cruise_Throttle": gas}
+    return self.packer.make_can_msg_panda("ES_Distance", 0, values)
+
+  def _send_rpm_msg(self, rpm):
+    values = {"Cruise_RPM": rpm}
+    return self.packer.make_can_msg_panda("ES_Status", 0, values)
 
 if __name__ == "__main__":
   unittest.main()

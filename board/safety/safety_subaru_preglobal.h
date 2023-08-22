@@ -9,6 +9,16 @@ const SteeringLimits SUBARU_PG_STEERING_LIMITS = {
   .type = TorqueDriverLimited,
 };
 
+const LongitudinalLimits SUBARU_PG_LONG_LIMITS = {
+  .min_gas = 808,       // appears to be engine braking
+  .max_gas = 3400,      // approx  2 m/s^2 when maxing cruise_rpm and cruise_throttle
+  .inactive_gas = 1818, // this is zero acceleration
+  .max_brake = 600,     // approx -3.5 m/s^2
+
+  .min_transmission_rpm = 0,
+  .max_transmission_rpm = 2400,
+};
+
 // Preglobal platform
 // 0x161 is ES_CruiseThrottle
 // 0x164 is ES_LKAS
@@ -18,7 +28,9 @@ const SteeringLimits SUBARU_PG_STEERING_LIMITS = {
 #define MSG_SUBARU_PG_Wheel_Speeds          0xD4
 #define MSG_SUBARU_PG_Brake_Pedal           0xD1
 #define MSG_SUBARU_PG_ES_LKAS               0x164
+#define MSG_SUBARU_PG_ES_Brake              0x160
 #define MSG_SUBARU_PG_ES_Distance           0x161
+#define MSG_SUBARU_PG_ES_Status             0x162
 #define MSG_SUBARU_PG_Steering_Torque       0x371
 
 #define SUBARU_PG_MAIN_BUS 0
@@ -29,6 +41,16 @@ const CanMsg SUBARU_PG_TX_MSGS[] = {
   {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8}
 };
 #define SUBARU_PG_TX_MSGS_LEN (sizeof(SUBARU_PG_TX_MSGS) / sizeof(SUBARU_PG_TX_MSGS[0]))
+
+const CanMsg SUBARU_PG_LONG_TX_MSGS[] = {
+  {MSG_SUBARU_PG_ES_Distance, SUBARU_PG_MAIN_BUS, 8},
+  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8},
+  {MSG_SUBARU_PG_ES_Distance,    SUBARU_PG_MAIN_BUS, 8},
+  {MSG_SUBARU_PG_ES_Brake,       SUBARU_PG_MAIN_BUS, 8},
+  {MSG_SUBARU_PG_ES_Status,      SUBARU_PG_MAIN_BUS, 8},
+};
+#define SUBARU_PG_LONG_TX_MSGS_LEN (sizeof(SUBARU_PG_LONG_TX_MSGS) / sizeof(SUBARU_PG_LONG_TX_MSGS[0]))
+
 
 // TODO: do checksum and counter checks after adding the signals to the outback dbc file
 AddrCheckStruct subaru_preglobal_addr_checks[] = {
@@ -82,9 +104,12 @@ static int subaru_preglobal_tx_hook(CANPacket_t *to_send) {
 
   int tx = 1;
   int addr = GET_ADDR(to_send);
+  bool violation = false;
 
-  if (!msg_allowed(to_send, SUBARU_PG_TX_MSGS, SUBARU_PG_TX_MSGS_LEN)) {
-    tx = 0;
+  if (subaru_longitudinal) {
+    tx = msg_allowed(to_send, SUBARU_PG_LONG_TX_MSGS, SUBARU_PG_LONG_TX_MSGS_LEN);
+  } else {
+    tx = msg_allowed(to_send, SUBARU_PG_TX_MSGS, SUBARU_PG_TX_MSGS_LEN);
   }
 
   // steer cmd checks
@@ -92,11 +117,40 @@ static int subaru_preglobal_tx_hook(CANPacket_t *to_send) {
     int desired_torque = ((GET_BYTES(to_send, 0, 4) >> 8) & 0x1FFFU);
     desired_torque = -1 * to_signed(desired_torque, 13);
 
-    if (steer_torque_cmd_checks(desired_torque, -1, SUBARU_PG_STEERING_LIMITS)) {
-      tx = 0;
-    }
-
+    violation |= steer_torque_cmd_checks(desired_torque, -1, SUBARU_PG_STEERING_LIMITS);
   }
+
+  // check es_brake brake_pressure limits
+  if (addr == MSG_SUBARU_PG_ES_Brake) {
+    int es_brake_pressure = GET_BYTES(to_send, 0, 2);
+    violation |= longitudinal_brake_checks(es_brake_pressure, SUBARU_PG_LONG_LIMITS);
+  }
+
+  // check es_distance cruise_throttle limits
+  if (addr == MSG_SUBARU_PG_ES_Distance) {
+    int cruise_throttle = (GET_BYTES(to_send, 0, 2) & 0xFFFU);
+    bool cruise_cancel = GET_BIT(to_send, 48U) != 0U;
+    
+    if (subaru_longitudinal) {
+      violation |= longitudinal_gas_checks(cruise_throttle, SUBARU_LONG_LIMITS);
+    } else {
+      // If openpilot is not controlling long, only allow ES_Distance for cruise cancel requests,
+      // (when Cruise_Cancel is true, and Cruise_Throttle is inactive)
+      violation |= (cruise_throttle != SUBARU_LONG_LIMITS.inactive_gas);
+      violation |= (!cruise_cancel);
+    }
+  }
+
+  // check es_status transmission_rpm limits
+  if (addr == MSG_SUBARU_PG_ES_Status) {
+    int transmission_rpm = (GET_BYTES(to_send, 2, 2) & 0xFFFU);
+    violation |= longitudinal_transmission_rpm_checks(transmission_rpm, SUBARU_LONG_LIMITS);
+  }
+
+  if (violation){
+    tx = 0;
+  }
+
   return tx;
 }
 
@@ -108,7 +162,13 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
   }
 
   if (bus_num == SUBARU_PG_CAM_BUS) {
-    int block_msg = ((addr == MSG_SUBARU_PG_ES_Distance) || (addr == MSG_SUBARU_PG_ES_LKAS));
+    bool block_lkas = ((addr == MSG_SUBARU_PG_ES_Distance) || (addr == MSG_SUBARU_PG_ES_LKAS));
+    bool block_long = ((addr == MSG_SUBARU_PG_ES_Brake) ||
+                       (addr == MSG_SUBARU_PG_ES_Distance) ||
+                       (addr == MSG_SUBARU_PG_ES_Status));
+
+    bool block_msg = block_lkas || (subaru_longitudinal && block_long);
+
     if (!block_msg) {
       bus_fwd = SUBARU_PG_MAIN_BUS;  // Main CAN
     }
@@ -118,7 +178,10 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
 }
 
 static const addr_checks* subaru_preglobal_init(uint16_t param) {
-  UNUSED(param);
+  #ifdef ALLOW_DEBUG
+    subaru_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
+  #endif
+
   return &subaru_preglobal_rx_checks;
 }
 
