@@ -36,18 +36,22 @@ const LongitudinalLimits SUBARU_PG_LONG_LIMITS = {
 #define SUBARU_PG_MAIN_BUS 0
 #define SUBARU_PG_CAM_BUS  2
 
+#define SUBARU_PG_COMMON_TX_MSGS()                       \
+  {MSG_SUBARU_PG_ES_Distance, SUBARU_PG_MAIN_BUS, 8},    \
+  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8},     \
+
+#define SUBARU_PG_COMMON_LONG_TX_MSGS()                  \
+  {MSG_SUBARU_PG_ES_Brake,       SUBARU_PG_MAIN_BUS, 8}, \
+  {MSG_SUBARU_PG_ES_Status,      SUBARU_PG_MAIN_BUS, 8}, \
+
 const CanMsg SUBARU_PG_TX_MSGS[] = {
-  {MSG_SUBARU_PG_ES_Distance, SUBARU_PG_MAIN_BUS, 8},
-  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8}
+  SUBARU_PG_COMMON_TX_MSGS()
 };
 #define SUBARU_PG_TX_MSGS_LEN (sizeof(SUBARU_PG_TX_MSGS) / sizeof(SUBARU_PG_TX_MSGS[0]))
 
 const CanMsg SUBARU_PG_LONG_TX_MSGS[] = {
-  {MSG_SUBARU_PG_ES_Distance, SUBARU_PG_MAIN_BUS, 8},
-  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8},
-  {MSG_SUBARU_PG_ES_Distance,    SUBARU_PG_MAIN_BUS, 8},
-  {MSG_SUBARU_PG_ES_Brake,       SUBARU_PG_MAIN_BUS, 8},
-  {MSG_SUBARU_PG_ES_Status,      SUBARU_PG_MAIN_BUS, 8},
+  SUBARU_PG_COMMON_TX_MSGS()
+  SUBARU_PG_COMMON_LONG_TX_MSGS()
 };
 #define SUBARU_PG_LONG_TX_MSGS_LEN (sizeof(SUBARU_PG_LONG_TX_MSGS) / sizeof(SUBARU_PG_LONG_TX_MSGS[0]))
 
@@ -129,15 +133,9 @@ static int subaru_preglobal_tx_hook(CANPacket_t *to_send) {
   // check es_distance cruise_throttle limits
   if (addr == MSG_SUBARU_PG_ES_Distance) {
     int cruise_throttle = (GET_BYTES(to_send, 0, 2) & 0xFFFU);
-    bool cruise_cancel = GET_BIT(to_send, 48U) != 0U;
     
     if (subaru_longitudinal) {
       violation |= longitudinal_gas_checks(cruise_throttle, SUBARU_LONG_LIMITS);
-    } else {
-      // If openpilot is not controlling long, only allow ES_Distance for cruise cancel requests,
-      // (when Cruise_Cancel is true, and Cruise_Throttle is inactive)
-      violation |= (cruise_throttle != SUBARU_LONG_LIMITS.inactive_gas);
-      violation |= (!cruise_cancel);
     }
   }
 
