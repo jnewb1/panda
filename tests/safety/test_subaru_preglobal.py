@@ -92,7 +92,7 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
 
   FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_Brake, MSG_SUBARU_PG_ES_Distance,
                                MSG_SUBARU_PG_ES_Status]}
-  
+
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_Brake, 0],
              [MSG_SUBARU_PG_ES_Status, 0]]
 

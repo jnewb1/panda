@@ -55,6 +55,7 @@ const CanMsg SUBARU_PG_LONG_TX_MSGS[] = {
 };
 #define SUBARU_PG_LONG_TX_MSGS_LEN (sizeof(SUBARU_PG_LONG_TX_MSGS) / sizeof(SUBARU_PG_LONG_TX_MSGS[0]))
 
+bool subaru_preglobal_longitudinal = false;
 
 // TODO: do checksum and counter checks after adding the signals to the outback dbc file
 AddrCheckStruct subaru_preglobal_addr_checks[] = {
@@ -110,7 +111,7 @@ static int subaru_preglobal_tx_hook(CANPacket_t *to_send) {
   int addr = GET_ADDR(to_send);
   bool violation = false;
 
-  if (subaru_longitudinal) {
+  if (subaru_preglobal_longitudinal) {
     tx = msg_allowed(to_send, SUBARU_PG_LONG_TX_MSGS, SUBARU_PG_LONG_TX_MSGS_LEN);
   } else {
     tx = msg_allowed(to_send, SUBARU_PG_TX_MSGS, SUBARU_PG_TX_MSGS_LEN);
@@ -134,7 +135,7 @@ static int subaru_preglobal_tx_hook(CANPacket_t *to_send) {
   if (addr == MSG_SUBARU_PG_ES_Distance) {
     int cruise_throttle = (GET_BYTES(to_send, 0, 2) & 0xFFFU);
     
-    if (subaru_longitudinal) {
+    if (subaru_preglobal_longitudinal) {
       violation |= longitudinal_gas_checks(cruise_throttle, SUBARU_LONG_LIMITS);
     }
   }
@@ -165,7 +166,7 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
                        (addr == MSG_SUBARU_PG_ES_Distance) ||
                        (addr == MSG_SUBARU_PG_ES_Status));
 
-    bool block_msg = block_lkas || (subaru_longitudinal && block_long);
+    bool block_msg = block_lkas || (subaru_preglobal_longitudinal && block_long);
 
     if (!block_msg) {
       bus_fwd = SUBARU_PG_MAIN_BUS;  // Main CAN
@@ -176,8 +177,10 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
 }
 
 static const addr_checks* subaru_preglobal_init(uint16_t param) {
+  UNUSED(param);
+
   #ifdef ALLOW_DEBUG
-    subaru_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
+    subaru_preglobal_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
   #endif
 
   return &subaru_preglobal_rx_checks;
