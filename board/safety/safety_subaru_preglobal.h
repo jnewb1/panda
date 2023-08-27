@@ -38,7 +38,7 @@ const LongitudinalLimits SUBARU_PG_LONG_LIMITS = {
 
 #define SUBARU_PG_COMMON_TX_MSGS()                       \
   {MSG_SUBARU_PG_ES_Distance, SUBARU_PG_MAIN_BUS, 8},    \
-  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8},     \
+  {MSG_SUBARU_PG_ES_LKAS,     SUBARU_PG_MAIN_BUS, 8},    \
 
 #define SUBARU_PG_COMMON_LONG_TX_MSGS()                  \
   {MSG_SUBARU_PG_ES_Brake,       SUBARU_PG_MAIN_BUS, 8}, \
@@ -161,7 +161,7 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
   }
 
   if (bus_num == SUBARU_PG_CAM_BUS) {
-    bool block_lkas = ((addr == MSG_SUBARU_PG_ES_Distance) || (addr == MSG_SUBARU_PG_ES_LKAS));
+    bool block_lkas = ((addr == MSG_SUBARU_PG_ES_LKAS));
     bool block_long = ((addr == MSG_SUBARU_PG_ES_Brake) ||
                        (addr == MSG_SUBARU_PG_ES_Distance) ||
                        (addr == MSG_SUBARU_PG_ES_Status));
