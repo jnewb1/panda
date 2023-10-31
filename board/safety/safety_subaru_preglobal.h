@@ -33,6 +33,8 @@ const LongitudinalLimits SUBARU_PG_LONG_LIMITS = {
 #define MSG_SUBARU_PG_ES_Status             0x162
 #define MSG_SUBARU_PG_Steering_Torque       0x371
 
+#define MSG_SUBARU_PG_Brake_Status          0xd3
+
 #define SUBARU_PG_MAIN_BUS 0
 #define SUBARU_PG_CAM_BUS  2
 
@@ -43,6 +45,7 @@ const LongitudinalLimits SUBARU_PG_LONG_LIMITS = {
 #define SUBARU_PG_COMMON_LONG_TX_MSGS()                  \
   {MSG_SUBARU_PG_ES_Brake,       SUBARU_PG_MAIN_BUS, 8}, \
   {MSG_SUBARU_PG_ES_Status,      SUBARU_PG_MAIN_BUS, 8}, \
+  {MSG_SUBARU_PG_Brake_Status,   SUBARU_PG_CAM_BUS, 7}, \
 
 const CanMsg SUBARU_PG_TX_MSGS[] = {
   SUBARU_PG_COMMON_TX_MSGS()

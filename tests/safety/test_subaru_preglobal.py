@@ -15,6 +15,7 @@ MSG_SUBARU_PG_ES_Brake            = 0x160
 MSG_SUBARU_PG_ES_Distance         = 0x161
 MSG_SUBARU_PG_ES_Status           = 0x162
 MSG_SUBARU_PG_Steering_Torque     = 0x371
+MSG_SUBARU_PG_Brake_Status        = 0xd3
 
 class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0]]
@@ -94,7 +95,7 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
                                MSG_SUBARU_PG_ES_Status]}
 
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_Brake, 0],
-             [MSG_SUBARU_PG_ES_Status, 0]]
+             [MSG_SUBARU_PG_ES_Status, 0], [MSG_SUBARU_PG_Brake_Status, 2]]
 
 
   def test_rpm_safety_check(self):
