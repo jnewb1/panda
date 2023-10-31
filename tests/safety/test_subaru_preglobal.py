@@ -92,7 +92,8 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
   FLAGS = Panda.FLAG_SUBARU_LONG
 
   FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_Brake, MSG_SUBARU_PG_ES_Distance,
-                               MSG_SUBARU_PG_ES_Status]}
+                               MSG_SUBARU_PG_ES_Status],
+                           0: [MSG_SUBARU_PG_Brake_Status]}
 
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_Brake, 0],
              [MSG_SUBARU_PG_ES_Status, 0], [MSG_SUBARU_PG_Brake_Status, 2]]

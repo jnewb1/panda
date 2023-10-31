@@ -162,7 +162,13 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
   int bus_fwd = -1;
 
   if (bus_num == SUBARU_PG_MAIN_BUS) {
-    bus_fwd = SUBARU_PG_CAM_BUS;  // Camera CAN
+    bool block_long = ((addr == MSG_SUBARU_PG_Brake_Status));
+
+    bool block_msg = (subaru_preglobal_longitudinal && block_long);
+
+    if (!block_msg) {
+      bus_fwd = SUBARU_PG_CAM_BUS;  // Camera CAN
+    }
   }
 
   if (bus_num == SUBARU_PG_CAM_BUS) {
