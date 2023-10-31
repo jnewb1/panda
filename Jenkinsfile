@@ -114,15 +114,24 @@ pipeline {
                 }
               }
             }
-            stage('prep') {
+            stage('jungle tests') {
               steps {
                 script {
                   retry (3) {
-                    docker_run("reset hardware", 3, "python ./tests/ci_reset_hw.py")
+                    docker_run("reset hardware", 3, "python ./tests/hitl/reset_jungles.py")
                   }
                 }
               }
             }
+            stage('bootkick tests') {
+              steps {
+                script {
+                  docker_run("test", 10, "pytest ./tests/som/test_bootkick.py")
+                }
+              }
+            }
+
+            /*
             stage('pedal tests') {
               steps {
                 script {
@@ -145,6 +154,7 @@ pipeline {
                 }
               }
             }
+            */
           }
         }
       }
