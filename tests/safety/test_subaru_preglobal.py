@@ -18,6 +18,7 @@ MSG_SUBARU_PG_Steering_Torque     = 0x371
 MSG_SUBARU_PG_Brake_Status        = 0xd3
 
 class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
+  FLAGS = 0
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0]]
   STANDSTILL_THRESHOLD = 0  # kph
   RELAY_MALFUNCTION_ADDR = MSG_SUBARU_PG_ES_LKAS
@@ -47,7 +48,6 @@ class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteer
     self.safety.set_desired_torque_last(t)
     self.safety.set_rt_torque_last(t)
 
-  # TODO: this is unused
   def _torque_driver_msg(self, torque):
     values = {"Steer_Torque_Sensor": torque}
     return self.packer.make_can_msg_panda("Steering_Torque", 0, values)
@@ -72,7 +72,6 @@ class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteer
   def _pcm_status_msg(self, enable):
     values = {"Cruise_Activated": enable}
     return self.packer.make_can_msg_panda("CruiseControl", 0, values)
-
 
 
 class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.LongitudinalGasBrakeSafetyTest):
@@ -113,6 +112,14 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
   def _send_rpm_msg(self, rpm):
     values = {"Cruise_RPM": rpm}
     return self.packer.make_can_msg_panda("ES_Status", 0, values)
+
+
+class TestSubaruPreglobalReversedDriverTorqueSafety(TestSubaruPreglobalSafety):
+  FLAGS = Panda.FLAG_SUBARU_PREGLOBAL_REVERSED_DRIVER_TORQUE
+
+  def _torque_driver_msg(self, torque):
+    return super()._torque_cmd_msg(-torque)
+
 
 if __name__ == "__main__":
   unittest.main()

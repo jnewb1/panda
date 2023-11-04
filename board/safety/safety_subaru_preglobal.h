@@ -69,6 +69,11 @@ AddrCheckStruct subaru_preglobal_addr_checks[] = {
 #define SUBARU_PG_ADDR_CHECK_LEN (sizeof(subaru_preglobal_addr_checks) / sizeof(subaru_preglobal_addr_checks[0]))
 addr_checks subaru_preglobal_rx_checks = {subaru_preglobal_addr_checks, SUBARU_PG_ADDR_CHECK_LEN};
 
+
+const int SUBARU_PG_PARAM_REVERSED_DRIVER_TORQUE = 1;
+bool subaru_pg_reversed_driver_torque = false;
+
+
 static int subaru_preglobal_rx_hook(CANPacket_t *to_push) {
 
   bool valid = addr_safety_check(to_push, &subaru_preglobal_rx_checks, NULL, NULL, NULL, NULL);
@@ -81,6 +86,7 @@ static int subaru_preglobal_rx_hook(CANPacket_t *to_push) {
       int torque_driver_new;
       torque_driver_new = (GET_BYTE(to_push, 3) >> 5) + (GET_BYTE(to_push, 4) << 3);
       torque_driver_new = to_signed(torque_driver_new, 11);
+      torque_driver_new = subaru_pg_reversed_driver_torque ? -torque_driver_new : torque_driver_new;
       update_sample(&torque_driver, torque_driver_new);
     }
 
@@ -188,12 +194,11 @@ static int subaru_preglobal_fwd_hook(int bus_num, int addr) {
 }
 
 static const addr_checks* subaru_preglobal_init(uint16_t param) {
-  UNUSED(param);
-
   #ifdef ALLOW_DEBUG
     subaru_preglobal_longitudinal = GET_FLAG(param, SUBARU_PARAM_LONGITUDINAL);
   #endif
 
+  subaru_pg_reversed_driver_torque = GET_FLAG(param, SUBARU_PG_PARAM_REVERSED_DRIVER_TORQUE);
   return &subaru_preglobal_rx_checks;
 }
 
