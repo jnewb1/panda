@@ -38,8 +38,10 @@ class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteer
 
   FLAGS = 0
 
+  DBC = "subaru_outback_2015_generated"
+
   def setUp(self):
-    self.packer = CANPackerPanda("subaru_outback_2015_generated")
+    self.packer = CANPackerPanda(self.DBC)
     self.safety = libpanda_py.libpanda
     self.safety.set_safety_hooks(Panda.SAFETY_SUBARU_PREGLOBAL, self.FLAGS)
     self.safety.init_tests()
@@ -117,8 +119,7 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
 class TestSubaruPreglobalReversedDriverTorqueSafety(TestSubaruPreglobalSafety):
   FLAGS = Panda.FLAG_SUBARU_PREGLOBAL_REVERSED_DRIVER_TORQUE
 
-  def _torque_driver_msg(self, torque):
-    return super()._torque_cmd_msg(-torque)
+  DBC = "subaru_outback_2019_generated"
 
 
 if __name__ == "__main__":
