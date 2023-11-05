@@ -14,17 +14,18 @@ MSG_SUBARU_PG_ES_LKAS             = 0x164
 MSG_SUBARU_PG_ES_Brake            = 0x160
 MSG_SUBARU_PG_ES_Distance         = 0x161
 MSG_SUBARU_PG_ES_Status           = 0x162
+MSG_SUBARU_PG_ES_DashStatus2      = 0x163
 MSG_SUBARU_PG_ES_DashStatus       = 0x166
 MSG_SUBARU_PG_Steering_Torque     = 0x371
 MSG_SUBARU_PG_Brake_Status        = 0xd3
 
 class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
   FLAGS = 0
-  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_DashStatus, 0]]
+  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_DashStatus, 0], [MSG_SUBARU_PG_ES_DashStatus2, 0]]
   STANDSTILL_THRESHOLD = 0  # kph
   RELAY_MALFUNCTION_ADDR = MSG_SUBARU_PG_ES_LKAS
   RELAY_MALFUNCTION_BUS = 0
-  FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_DashStatus]}
+  FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_DashStatus, MSG_SUBARU_PG_ES_DashStatus2]}
   FWD_BUS_LOOKUP = {0: 2, 2: 0}
 
   MAX_RATE_UP = 50
@@ -94,10 +95,10 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
   FLAGS = Panda.FLAG_SUBARU_LONG
 
   FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_Brake, MSG_SUBARU_PG_ES_Distance,
-                               MSG_SUBARU_PG_ES_DashStatus, MSG_SUBARU_PG_ES_Status],
+                               MSG_SUBARU_PG_ES_DashStatus, MSG_SUBARU_PG_ES_DashStatus2, MSG_SUBARU_PG_ES_Status],
                            0: [MSG_SUBARU_PG_Brake_Status]}
 
-  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_DashStatus, 0],
+  TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_DashStatus, 0], [MSG_SUBARU_PG_ES_DashStatus2, 0],
              [MSG_SUBARU_PG_ES_Brake, 0], [MSG_SUBARU_PG_ES_Status, 0], [MSG_SUBARU_PG_Brake_Status, 2]]
 
 
