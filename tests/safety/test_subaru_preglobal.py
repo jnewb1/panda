@@ -39,10 +39,6 @@ class TestSubaruPreglobalSafety(common.PandaCarSafetyTest, common.DriverTorqueSt
   DRIVER_TORQUE_ALLOWANCE = 75
   DRIVER_TORQUE_FACTOR = 10
 
-  FLAGS = 0
-
-  DBC = "subaru_outback_2015_generated"
-
   def setUp(self):
     self.packer = CANPackerPanda(self.DBC)
     self.safety = libpanda_py.libpanda
