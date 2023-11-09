@@ -19,12 +19,13 @@ MSG_SUBARU_PG_ES_DashStatus       = 0x166
 MSG_SUBARU_PG_Steering_Torque     = 0x371
 MSG_SUBARU_PG_Brake_Status        = 0xd3
 
-class TestSubaruPreglobalSafety(common.PandaSafetyTest, common.DriverTorqueSteeringSafetyTest):
+
+class TestSubaruPreglobalSafety(common.PandaCarSafetyTest, common.DriverTorqueSteeringSafetyTest):
   FLAGS = 0
+  DBC = "subaru_outback_2015_generated"
   TX_MSGS = [[MSG_SUBARU_PG_ES_Distance, 0], [MSG_SUBARU_PG_ES_LKAS, 0], [MSG_SUBARU_PG_ES_DashStatus, 0], [MSG_SUBARU_PG_ES_DashStatus2, 0]]
   STANDSTILL_THRESHOLD = 0  # kph
-  RELAY_MALFUNCTION_ADDR = MSG_SUBARU_PG_ES_LKAS
-  RELAY_MALFUNCTION_BUS = 0
+  RELAY_MALFUNCTION_ADDRS = {0: (MSG_SUBARU_PG_ES_LKAS,)}
   FWD_BLACKLISTED_ADDRS = {2: [MSG_SUBARU_PG_ES_LKAS, MSG_SUBARU_PG_ES_DashStatus, MSG_SUBARU_PG_ES_DashStatus2]}
   FWD_BUS_LOOKUP = {0: 2, 2: 0}
 
@@ -120,8 +121,12 @@ class TestSubaruPreglobalLongitudinalSafety(TestSubaruPreglobalSafety, common.Lo
 
 class TestSubaruPreglobalReversedDriverTorqueSafety(TestSubaruPreglobalSafety):
   FLAGS = Panda.FLAG_SUBARU_PREGLOBAL_REVERSED_DRIVER_TORQUE
-
   DBC = "subaru_outback_2019_generated"
+
+
+class TestSubaruPreglobalLongitudinalReversedDriverSafety(TestSubaruPreglobalLongitudinalSafety, TestSubaruPreglobalReversedDriverTorqueSafety):
+  FLAGS = Panda.FLAG_SUBARU_PREGLOBAL_REVERSED_DRIVER_TORQUE | Panda.FLAG_SUBARU_LONG
+
 
 
 if __name__ == "__main__":
